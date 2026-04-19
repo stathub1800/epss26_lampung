@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upload Bukti Dukung — Sistem Rekap SDI</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #F5F3EE;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE6;
+    --border: #DDD9D0;
+    --border2: #C8C3B8;
+    --text: #1A1916;
+    --text2: #6B6860;
+    --text3: #9B9890;
+    --accent: #2D5A3D;
+    --accent-light: #E8F2EC;
+    --accent2: #8B4513;
+    --danger: #C0392B;
+    --danger-light: #FDECEA;
+    --warn: #B7791F;
+    --warn-light: #FEF3CD;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+  .top-bar {
+    background: var(--accent);
+    color: #fff;
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .top-bar .logo {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 18px;
+    letter-spacing: -0.01em;
+  }
+  .top-bar .sub {
+    font-size: 12px;
+    opacity: 0.7;
+    margin-top: 1px;
+  }
+  .top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .btn-login-google {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: background 0.15s;
+  }
+  .btn-login-google:hover { background: rgba(255,255,255,0.25); }
+  .user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.15);
+    padding: 4px 12px 4px 4px;
+    border-radius: 20px;
+  }
+  .user-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    overflow: hidden;
+  }
+  .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .user-name { font-size: 13px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .btn-logout { background: none; border: none; color: rgba(255,255,255,0.6); font-size: 12px; cursor: pointer; font-family: inherit; padding: 0; margin-left: 4px; }
+  .btn-logout:hover { color: #fff; }
+
+  .hero {
+    background: var(--accent);
+    padding: 48px 32px 64px;
+    color: #fff;
+  }
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 36px;
+    line-height: 1.15;
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
+  }
+  .hero h1 em { font-style: italic; }
+  .hero p { font-size: 14px; opacity: 0.75; max-width: 480px; line-height: 1.6; }
+  .step-pills {
+    display: flex;
+    gap: 8px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .step-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+  }
+  .step-num {
+    width: 18px; height: 18px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 600;
+  }
+
+  .main {
+    max-width: 680px;
+    margin: -24px auto 60px;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .login-required {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 48px 32px;
+    text-align: center;
+    margin-top: 0;
+  }
+  .login-required .icon {
+    width: 52px; height: 52px;
+    background: var(--accent-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+  }
+  .login-required h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .login-required p { font-size: 13px; color: var(--text2); line-height: 1.5; margin-bottom: 20px; }
+  .btn-google-big {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text);
+    transition: all 0.15s;
+  }
+  .btn-google-big:hover { background: var(--surface2); border-color: var(--border2); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .field label .req { color: var(--danger); margin-left: 2px; }
+  .field label .hint { font-weight: 400; color: var(--text3); font-size: 12px; margin-left: 4px; }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6860' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+  }
+  .field textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media(max-width:520px) { .field-row { grid-template-columns: 1fr; } }
+
+  .drop-zone {
+    border: 2px dashed var(--border2);
+    border-radius: var(--radius);
+    padding: 32px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface2);
+    position: relative;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .drop-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .drop-icon {
+    width: 40px; height: 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px;
+  }
+  .drop-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .drop-sub { font-size: 12px; color: var(--text3); }
+
+  .file-selected {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--accent-light);
+    border: 1px solid #B8D9C3;
+    border-radius: var(--radius);
+    margin-top: 10px;
+  }
+  .file-selected .file-icon {
+    width: 36px; height: 36px; flex-shrink: 0;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .file-selected .file-name { font-size: 13px; font-weight: 500; flex: 1; word-break: break-all; }
+  .file-selected .file-size { font-size: 12px; color: var(--text2); }
+  .btn-remove { background: none; border: none; cursor: pointer; color: var(--text3); padding: 4px; }
+  .btn-remove:hover { color: var(--danger); }
+
+  .page-picker { margin-top: 12px; }
+  .page-picker-label { font-size: 13px; font-weight: 500; margin-bottom: 8px; color: var(--text); }
+  .page-picker-hint { font-size: 12px; color: var(--text3); margin-bottom: 10px; line-height: 1.5; }
+  .page-input-row { display: flex; gap: 8px; align-items: center; }
+  .page-input-row input { flex: 1; }
+  .btn-add-page {
+    padding: 9px 16px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+  .btn-add-page:hover { opacity: 0.88; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; min-height: 0; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 10px 3px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .chip.highlighted {
+    background: var(--accent-light);
+    border-color: #B8D9C3;
+    color: var(--accent);
+  }
+  .chip-label { font-size: 11px; color: var(--text2); font-weight: 400; margin-left: 2px; }
+  .chip-del { background: none; border: none; cursor: pointer; color: var(--text3); padding: 0; line-height: 1; font-size: 14px; }
+  .chip-del:hover { color: var(--danger); }
+  .no-chips { font-size: 12px; color: var(--text3); font-style: italic; padding: 4px 0; }
+
+  .info-box {
+    background: var(--warn-light);
+    border: 1px solid #F6D77A;
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-size: 12px;
+    color: #7A5200;
+    line-height: 1.5;
+    margin-top: 12px;
+  }
+  .info-box strong { font-weight: 600; }
+
+  .btn-submit {
+    width: 100%;
+    padding: 13px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-submit:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--text);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 9999;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success { background: var(--accent); }
+  .toast.error { background: var(--danger); }
+
+  .progress-bar-wrap { margin-top: 10px; display: none; }
+  .progress-bar-wrap.visible { display: block; }
+  .progress-bar-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.3s;
+  }
+  .progress-label { font-size: 12px; color: var(--text2); margin-top: 5px; }
+
+  .success-screen {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 48px 32px;
+    text-align: center;
+    display: none;
+  }
+  .success-screen.show { display: block; }
+  .success-icon {
+    width: 56px; height: 56px;
+    background: var(--accent-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+  }
+  .success-screen h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  .success-screen p { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 20px; }
+  .btn-another {
+    padding: 9px 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text);
+    transition: background 0.15s;
+  }
+  .btn-another:hover { background: var(--border); }
+
+  .footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    color: var(--text3);
+  }
+  .footer a { color: var(--text2); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div>
+    <div class="logo">Sistem Rekap Bukti Dukung</div>
+    <div class="sub">Satu Data Indonesia — Portal OPD</div>
+  </div>
+  <div class="top-bar-right" id="authArea">
+    <button class="btn-login-google" id="btnLogin" onclick="loginGoogle()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Masuk dengan Google
+    </button>
+    <div class="user-chip" id="userChip" style="display:none">
+      <div class="user-avatar" id="userAvatar"></div>
+      <span class="user-name" id="userName"></span>
+      <button class="btn-logout" onclick="logout()">Keluar</button>
+    </div>
+  </div>
+</div>
+
+<div class="hero">
+  <h1>Upload <em>Bukti Dukung</em><br>Indikator SDI</h1>
+  <p>Kirim dokumen bukti dukung Anda beserta penandaan halaman penting. Kominfo akan merekap seluruh dokumen secara otomatis.</p>
+  <div class="step-pills">
+    <div class="step-pill"><div class="step-num">1</div> Masuk dengan akun Google</div>
+    <div class="step-pill"><div class="step-num">2</div> Isi form & upload PDF</div>
+    <div class="step-pill"><div class="step-num">3</div> Tandai halaman penting</div>
+    <div class="step-pill"><div class="step-num">4</div> Kirim — selesai</div>
+  </div>
+</div>
+
+<div class="main">
+  <!-- Login required state -->
+  <div class="login-required" id="loginRequired">
+    <div class="icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2D5A3D" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h2>Masuk terlebih dahulu</h2>
+    <p>Gunakan akun Google instansi Anda untuk mengakses form upload bukti dukung.</p>
+    <button class="btn-google-big" onclick="loginGoogle()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Masuk dengan Google
+    </button>
+  </div>
+
+  <!-- Form (shown after login) -->
+  <div id="formArea" style="display:none">
+
+    <div class="success-screen" id="successScreen">
+      <div class="success-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2D5A3D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <h2>Dokumen berhasil dikirim!</h2>
+      <p>Bukti dukung Anda sudah masuk ke sistem dan siap direkap oleh Kominfo. Terima kasih.</p>
+      <button class="btn-another" onclick="resetForm()">+ Kirim dokumen lain</button>
+    </div>
+
+    <div id="mainForm">
+      <div class="card">
+        <div class="card-title">Informasi Pengirim & Indikator</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Nama OPD <span class="req">*</span></label>
+            <select id="opdName">
+              <option value="">— Pilih OPD —</option>
+              <!-- Isi sesuai OPD kabupaten/kota Anda di CONFIG -->
+            </select>
+          </div>
+          <div class="field">
+            <label>Kode Indikator <span class="req">*</span></label>
+            <select id="indikatorCode">
+              <option value="">— Pilih indikator —</option>
+              <!-- Isi sesuai indikator di CONFIG -->
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Nama Dokumen Bukti Dukung <span class="req">*</span><span class="hint">— judul lengkap dokumen yang diupload</span></label>
+          <input type="text" id="docName" placeholder="cth: Profil Kesehatan Kabupaten Pesawaran Tahun 2023">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Upload File PDF</div>
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" accept=".pdf" onchange="handleFileSelect(event)">
+          <div class="drop-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B6860" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div class="drop-title">Klik atau seret file PDF ke sini</div>
+          <div class="drop-sub">Maksimal 50 MB · Hanya format .pdf</div>
+        </div>
+        <div id="filePreview" style="display:none" class="file-selected">
+          <div class="file-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div>
+            <div class="file-name" id="fileName"></div>
+            <div class="file-size" id="fileSize"></div>
+          </div>
+          <button class="btn-remove" onclick="removeFile()" title="Hapus file">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="progress-bar-wrap" id="progressWrap">
+          <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div>
+          <div class="progress-label" id="progressLabel">Mengunggah...</div>
+        </div>
+      </div>
+
+      <div class="card" id="pagePickerCard" style="display:none">
+        <div class="card-title">Tandai Halaman Penting</div>
+        <div class="page-picker-hint">Tandai halaman yang <strong>paling mewakili bukti</strong> untuk indikator ini — halaman yang akan ditampilkan sebagai thumbnail dalam dokumen rekap Kominfo.</div>
+        <div class="page-input-row">
+          <input type="number" id="pageInput" min="1" placeholder="Nomor halaman, cth: 3" onkeydown="if(event.key==='Enter'){event.preventDefault();addPage()}">
+          <input type="text" id="pageLabelInput" placeholder="Keterangan singkat (opsional)" style="flex:2">
+          <button class="btn-add-page" onclick="addPage()">+ Tambah</button>
+        </div>
+        <div class="chips" id="chipsContainer">
+          <span class="no-chips">Belum ada halaman ditandai</span>
+        </div>
+        <div class="info-box">
+          <strong>Tips:</strong> Pilih halaman yang memuat judul dokumen (cover), tabel data utama, atau bagian yang secara langsung membuktikan penerapan standar. Tidak perlu semua halaman — cukup 1–5 halaman terpenting.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Keterangan Tambahan</div>
+        <div class="field">
+          <label>Catatan untuk Kominfo <span class="hint">— opsional</span></label>
+          <textarea id="notes" placeholder="cth: Dokumen ini adalah SE resmi yang menjadi dasar hukum penerapan standar data di Dinkes. Lihat halaman 2 untuk tanda tangan pejabat."></textarea>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="btnSubmit" onclick="submitForm()" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Kirim Bukti Dukung
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  Sistem Rekap Bukti Dukung SDI &nbsp;·&nbsp; <a href="admin.html">Portal Kominfo</a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   KONFIGURASI — EDIT BAGIAN INI SESUAI SETUP ANDA
+   ============================================================ */
+const CONFIG = {
+  supabaseUrl: 'https://nvuousxbejspwgpfuouh.supabase.co',
+  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52dW91c3hiZWpzcHdncGZ1b3VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDE4NjgsImV4cCI6MjA5MjE3Nzg2OH0.GDMUs6gtP8s0nnDvLSOr82PK0i6_XX-0PLE2pyP_m0w',
+  googleClientId: '406944649417-joe4eg5241mbufbposhtr2743l9h18h7.apps.googleusercontent.com',
+  googleDriveFolderId: '14zc766sKadStKszq8ltOfxWkJrS1ydO2',
+  kabupatenKota: 'Kabupaten Pesawaran',
+
+  opd: [
+    'Dinas Kesehatan',
+    'Dinas Kependudukan dan Pencatatan Sipil',
+    'Dinas Pendidikan',
+    'Dinas Pekerjaan Umum',
+    'Bappeda',
+    'Dinas Pertanian',
+    'Dinas Sosial',
+    'Dinas Komunikasi dan Informatika',
+    'Dinas Perdagangan',
+    'Dinas Lingkungan Hidup',
+    'Dinas Perikanan',
+    'Satpol PP',
+    'BPBD',
+    'Dinas Pariwisata',
+    // Tambah OPD lain sesuai kebutuhan
+  ],
+
+  indikator: [
+    { kode: '10101', nama: 'Tingkat Kematangan Penerapan Standar Data Statistik (SDS)' },
+    { kode: '10201', nama: 'Tingkat Kematangan Penerapan Metadata Statistik' },
+    { kode: '10301', nama: 'Tingkat Kematangan Penerapan Kode Referensi & Data Induk' },
+    { kode: '10401', nama: 'Tingkat Kematangan Penerapan Data Prioritas' },
+    { kode: '20101', nama: 'Tingkat Kelengkapan Metadata Kegiatan Statistik' },
+    { kode: '20201', nama: 'Tingkat Ketersediaan Data Statistik Sektoral' },
+    // Tambah indikator lain sesuai kebutuhan
+  ]
+};
+/* ============================================================ */
+
+const { createClient } = supabase;
+const sb = createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+
+let currentUser = null;
+let selectedFile = null;
+let markedPages = [];
+
+// Populate selects
+window.addEventListener('DOMContentLoaded', () => {
+  const opdSel = document.getElementById('opdName');
+  CONFIG.opd.forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o; opt.textContent = o;
+    opdSel.appendChild(opt);
+  });
+
+  const indSel = document.getElementById('indikatorCode');
+  CONFIG.indikator.forEach(i => {
+    const opt = document.createElement('option');
+    opt.value = i.kode;
+    opt.textContent = `${i.kode} — ${i.nama}`;
+    indSel.appendChild(opt);
+  });
+
+  checkSession();
+
+  // Drag & drop
+  const dz = document.getElementById('dropZone');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') setFile(file);
+    else showToast('Hanya file PDF yang diterima', 'error');
+  });
+
+  ['opdName', 'indikatorCode', 'docName'].forEach(id => {
+    document.getElementById(id).addEventListener('change', updateSubmitState);
+    document.getElementById(id).addEventListener('input', updateSubmitState);
+  });
+});
+
+async function checkSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) setUser(session.user);
+}
+
+async function loginGoogle() {
+  await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      scopes: 'https://www.googleapis.com/auth/drive.file',
+      redirectTo: window.location.href
+    }
+  });
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  currentUser = null;
+  document.getElementById('loginRequired').style.display = 'block';
+  document.getElementById('formArea').style.display = 'none';
+  document.getElementById('userChip').style.display = 'none';
+  document.getElementById('btnLogin').style.display = 'flex';
+}
+
+function setUser(user) {
+  currentUser = user;
+  document.getElementById('loginRequired').style.display = 'none';
+  document.getElementById('formArea').style.display = 'block';
+  document.getElementById('btnLogin').style.display = 'none';
+  document.getElementById('userChip').style.display = 'flex';
+  document.getElementById('userName').textContent = user.user_metadata?.full_name || user.email;
+  const av = document.getElementById('userAvatar');
+  if (user.user_metadata?.avatar_url) {
+    av.innerHTML = `<img src="${user.user_metadata.avatar_url}">`;
+  } else {
+    av.textContent = (user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase();
+  }
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) setUser(session.user);
+    if (event === 'SIGNED_OUT') logout();
+  });
+}
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) setFile(file);
+}
+
+function setFile(file) {
+  if (file.size > 50 * 1024 * 1024) { showToast('File melebihi batas 50MB', 'error'); return; }
+  selectedFile = file;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileSize').textContent = formatSize(file.size);
+  document.getElementById('filePreview').style.display = 'flex';
+  document.getElementById('dropZone').style.display = 'none';
+  document.getElementById('pagePickerCard').style.display = 'block';
+  updateSubmitState();
+}
+
+function removeFile() {
+  selectedFile = null;
+  markedPages = [];
+  document.getElementById('fileInput').value = '';
+  document.getElementById('filePreview').style.display = 'none';
+  document.getElementById('dropZone').style.display = 'block';
+  document.getElementById('pagePickerCard').style.display = 'none';
+  renderChips();
+  updateSubmitState();
+}
+
+function addPage() {
+  const num = parseInt(document.getElementById('pageInput').value);
+  const label = document.getElementById('pageLabelInput').value.trim();
+  if (!num || num < 1) { showToast('Masukkan nomor halaman yang valid', 'error'); return; }
+  if (markedPages.find(p => p.page === num)) { showToast('Halaman ini sudah ditandai', 'error'); return; }
+  markedPages.push({ page: num, label: label || '' });
+  markedPages.sort((a, b) => a.page - b.page);
+  document.getElementById('pageInput').value = '';
+  document.getElementById('pageLabelInput').value = '';
+  renderChips();
+  document.getElementById('pageInput').focus();
+}
+
+function removePage(num) {
+  markedPages = markedPages.filter(p => p.page !== num);
+  renderChips();
+}
+
+function renderChips() {
+  const c = document.getElementById('chipsContainer');
+  if (markedPages.length === 0) {
+    c.innerHTML = '<span class="no-chips">Belum ada halaman ditandai</span>';
+    return;
+  }
+  c.innerHTML = markedPages.map(p => `
+    <div class="chip highlighted">
+      Hal. ${p.page}
+      ${p.label ? `<span class="chip-label">· ${p.label}</span>` : ''}
+      <button class="chip-del" onclick="removePage(${p.page})" title="Hapus">×</button>
+    </div>
+  `).join('');
+}
+
+function updateSubmitState() {
+  const ok = currentUser &&
+    document.getElementById('opdName').value &&
+    document.getElementById('indikatorCode').value &&
+    document.getElementById('docName').value.trim() &&
+    selectedFile;
+  document.getElementById('btnSubmit').disabled = !ok;
+}
+
+async function submitForm() {
+  if (!currentUser) return;
+  const opdName = document.getElementById('opdName').value;
+  const indikatorCode = document.getElementById('indikatorCode').value;
+  const indikatorObj = CONFIG.indikator.find(i => i.kode === indikatorCode);
+  const docName = document.getElementById('docName').value.trim();
+  const notes = document.getElementById('notes').value.trim();
+
+  const btn = document.getElementById('btnSubmit');
+  btn.disabled = true;
+  btn.innerHTML = '<span>Mengupload...</span>';
+
+  try {
+    // 1. Upload ke Google Drive via Supabase Storage atau Drive API
+    const { data: { session } } = await sb.auth.getSession();
+    const accessToken = session?.provider_token;
+
+    let driveFileId = null;
+    let driveViewLink = null;
+
+    if (accessToken) {
+      const progressWrap = document.getElementById('progressWrap');
+      const progressFill = document.getElementById('progressFill');
+      const progressLabel = document.getElementById('progressLabel');
+      progressWrap.classList.add('visible');
+
+      // Upload ke Google Drive
+      const metadata = JSON.stringify({
+        name: `[${indikatorCode}] ${opdName} — ${docName}.pdf`,
+        parents: [CONFIG.googleDriveFolderId],
+        description: `OPD: ${opdName} | Indikator: ${indikatorCode} | Catatan: ${notes}`
+      });
+      const form = new FormData();
+      form.append('metadata', new Blob([metadata], { type: 'application/json' }));
+      form.append('file', selectedFile);
+
+      const xhr = new XMLHttpRequest();
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          progressFill.style.width = pct + '%';
+          progressLabel.textContent = `Mengupload ke Google Drive... ${pct}%`;
+        }
+      };
+
+      driveFileId = await new Promise((resolve, reject) => {
+        xhr.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink');
+        xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            const res = JSON.parse(xhr.responseText);
+            driveViewLink = res.webViewLink;
+            resolve(res.id);
+          } else {
+            reject(new Error('Upload Drive gagal: ' + xhr.responseText));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Koneksi gagal'));
+        xhr.send(form);
+      });
+
+      // Set permission publik (siapa saja dengan link bisa lihat)
+      await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}/permissions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + accessToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ role: 'reader', type: 'anyone' })
+      });
+
+      progressLabel.textContent = 'Upload selesai. Menyimpan data...';
+    }
+
+    // 2. Simpan metadata ke Supabase
+    const { error } = await sb.from('bukti_dukung').insert({
+      opd_name: opdName,
+      indikator_kode: indikatorCode,
+      indikator_nama: indikatorObj?.nama || '',
+      doc_name: docName,
+      drive_file_id: driveFileId,
+      drive_view_link: driveViewLink,
+      marked_pages: markedPages,
+      notes: notes,
+      submitted_by_email: currentUser.email,
+      submitted_by_name: currentUser.user_metadata?.full_name || currentUser.email,
+      status: 'pending',
+      kabupaten: CONFIG.kabupatenKota
+    });
+
+    if (error) throw error;
+
+    document.getElementById('progressWrap').classList.remove('visible');
+    document.getElementById('mainForm').style.display = 'none';
+    document.getElementById('successScreen').classList.add('show');
+    showToast('Dokumen berhasil dikirim!', 'success');
+
+  } catch (err) {
+    console.error(err);
+    showToast('Gagal mengirim: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Kirim Bukti Dukung`;
+  }
+}
+
+function resetForm() {
+  document.getElementById('successScreen').classList.remove('show');
+  document.getElementById('mainForm').style.display = 'block';
+  document.getElementById('opdName').value = '';
+  document.getElementById('indikatorCode').value = '';
+  document.getElementById('docName').value = '';
+  document.getElementById('notes').value = '';
+  removeFile();
+  markedPages = [];
+  renderChips();
+  updateSubmitState();
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+</script>
+</body>
+</html>
