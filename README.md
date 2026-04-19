@@ -1,46 +1,65 @@
 # Sistem Rekap Bukti Dukung SDI
-**Panduan Setup Lengkap — Tidak Perlu Coding**
+**Panduan Setup — Versi Tanpa Google OAuth (Lebih Mudah)**
 
 ---
 
-## Gambaran Sistem
+## Komponen Sistem
 
 | Komponen | Fungsi | Biaya |
 |---|---|---|
 | **GitHub Pages** | Hosting semua halaman web | Gratis |
-| **Supabase** | Simpan metadata dokumen (nama OPD, indikator, nomor halaman) | Gratis |
-| **Google Drive** | Simpan file PDF asli dokumen OPD | Gratis |
-| **Google OAuth** | Login akun Google untuk OPD | Gratis |
+| **Supabase** | Database + sistem login username/password | Gratis |
+| **Google Drive** | OPD simpan file PDF sendiri, paste link ke form | Gratis |
+
+> Tidak ada Google OAuth, tidak ada Google Cloud Console — jauh lebih sederhana.
 
 ---
 
-## Langkah 1: Buat Akun Supabase
+## Alur Kerja
 
-1. Buka **https://supabase.com** → klik **Start your project**
-2. Daftar dengan akun GitHub atau email
+1. **Kominfo** buat akun untuk setiap OPD di dashboard admin
+2. **OPD** terima username + password dari Kominfo
+3. **OPD** upload PDF ke Google Drive mereka sendiri → salin link → paste di form
+4. **Kominfo** buka dashboard → pilih indikator → klik Generate → file rekap terunduh
+
+---
+
+## Langkah 1: Setup Supabase
+
+### 1a. Buat Project
+
+1. Buka **https://supabase.com** → **Start your project**
+2. Daftar / login
 3. Klik **New Project**
-4. Isi:
-   - **Name**: `rekap-sdi-pesawaran` (atau nama kabupaten Anda)
-   - **Database Password**: buat password yang kuat, simpan di tempat aman
-   - **Region**: pilih **Southeast Asia (Singapore)**
-5. Tunggu ~2 menit sampai project siap
+   - Name: `rekap-sdi` (atau nama lain)
+   - Database Password: buat password kuat, simpan
+   - Region: **Southeast Asia (Singapore)**
+4. Tunggu ~2 menit
 
-### 1a. Salin URL dan Key Supabase
+### 1b. Salin URL dan Key
 
-1. Di dashboard Supabase, klik **Settings** (ikon roda gigi di sidebar kiri)
-2. Klik **API**
-3. Salin dua nilai ini:
-   - **Project URL** → contoh: `https://abcxyz.supabase.co`
-   - **anon / public key** → string panjang diawali `eyJ...`
-4. Simpan dua nilai ini, akan dipakai di langkah 4
+1. Klik **Settings** → **API**
+2. Salin:
+   - **Project URL** → `https://xxxxxx.supabase.co`
+   - **anon / public key** → string panjang `eyJ...`
 
-### 1b. Buat Tabel Database
+### 1c. Buat Tabel Database
 
-1. Di Supabase, klik **SQL Editor** (ikon terminal di sidebar)
-2. Klik **New query**
-3. Copy-paste SQL berikut, lalu klik **Run**:
+1. Klik **SQL Editor** → **New query**
+2. Copy-paste SQL berikut → klik **Run**:
 
 ```sql
+-- Tabel profil akun OPD
+create table opd_users (
+  id uuid default gen_random_uuid() primary key,
+  user_id text,
+  username text unique not null,
+  email text not null,
+  opd_name text not null,
+  created_at timestamptz default now()
+);
+
+-- Tabel dokumen bukti dukung
 create table bukti_dukung (
   id uuid default gen_random_uuid() primary key,
   created_at timestamptz default now(),
@@ -48,254 +67,188 @@ create table bukti_dukung (
   indikator_kode text not null,
   indikator_nama text,
   doc_name text not null,
-  drive_file_id text,
-  drive_view_link text,
+  drive_link text,
   marked_pages jsonb default '[]',
   notes text,
-  submitted_by_email text,
-  submitted_by_name text,
+  submitted_by text,
   status text default 'pending',
-  kabupaten text
+  kabupaten text,
+  user_id text
 );
 
--- Izinkan akses dari web (Row Level Security)
+-- Izin akses (Row Level Security)
+alter table opd_users enable row level security;
 alter table bukti_dukung enable row level security;
 
-create policy "Allow insert for authenticated"
-on bukti_dukung for insert
-to authenticated
-with check (true);
-
-create policy "Allow select for authenticated"
-on bukti_dukung for select
-to authenticated
-using (true);
-
-create policy "Allow update for authenticated"
-on bukti_dukung for update
-to authenticated
-using (true);
+create policy "opd_users_all" on opd_users for all to authenticated using (true) with check (true);
+create policy "opd_users_select_anon" on opd_users for select to anon using (true);
+create policy "bukti_dukung_all" on bukti_dukung for all to authenticated using (true) with check (true);
 ```
 
-4. Klik **Run** — harus muncul pesan "Success"
+3. Harus muncul "Success. No rows returned"
 
-### 1c. Aktifkan Google Login di Supabase
+### 1d. Aktifkan Email Auth (untuk login username/password)
 
-1. Di Supabase, klik **Authentication** → **Providers**
-2. Cari **Google** → klik untuk expand → aktifkan toggle **Enable**
-3. Anda perlu **Client ID** dan **Client Secret** dari Google — lanjut ke Langkah 2
-
----
-
-## Langkah 2: Setup Google Cloud (OAuth + Drive)
-
-### 2a. Buat Project Google Cloud
-
-1. Buka **https://console.cloud.google.com**
-2. Login dengan akun Google Kominfo
-3. Klik dropdown project di atas → **New Project**
-4. Nama: `Rekap SDI Pesawaran` → klik **Create**
-
-### 2b. Aktifkan Google Drive API
-
-1. Di menu kiri: **APIs & Services** → **Library**
-2. Cari `Google Drive API` → klik → klik **Enable**
-
-### 2c. Buat OAuth Credentials
-
-1. Di menu kiri: **APIs & Services** → **Credentials**
-2. Klik **+ Create Credentials** → pilih **OAuth client ID**
-3. Jika diminta configure consent screen:
-   - Pilih **External** → **Create**
-   - Isi **App name**: `Rekap Bukti Dukung SDI`
-   - Isi **User support email**: email Kominfo Anda
-   - Isi **Developer contact**: email Kominfo Anda
-   - Klik **Save and Continue** sampai selesai
-4. Kembali buat OAuth client ID:
-   - **Application type**: pilih **Web application**
-   - **Name**: `Rekap SDI Web`
-   - Di **Authorized JavaScript origins**, tambahkan:
-     ```
-     https://NAMA_AKUN_GITHUB_ANDA.github.io
-     http://localhost
-     ```
-   - Di **Authorized redirect URIs**, tambahkan URL dari Supabase:
-     Formatnya: `https://SUPABASE_PROJECT_ID.supabase.co/auth/v1/callback`
-     > Cari SUPABASE_PROJECT_ID di URL Supabase Anda (bagian antara `https://` dan `.supabase.co`)
-5. Klik **Create**
-6. Salin **Client ID** dan **Client Secret** yang muncul
-
-### 2d. Masukkan ke Supabase
-
-1. Kembali ke Supabase → **Authentication** → **Providers** → **Google**
-2. Isi:
-   - **Client ID**: paste dari langkah 2c
-   - **Client Secret**: paste dari langkah 2c
-3. Klik **Save**
-
-### 2e. Buat Folder Google Drive
-
-1. Buka **Google Drive** (drive.google.com) dengan akun Kominfo
-2. Buat folder baru: klik **+ New** → **Folder** → nama: `Bukti Dukung SDI 2024`
-3. Buka folder tersebut
-4. Salin **ID folder** dari URL browser:
-   - URL contoh: `https://drive.google.com/drive/folders/1ABC123def456XYZ`
-   - ID folder-nya: `1ABC123def456XYZ` (bagian setelah `folders/`)
-5. Klik kanan folder → **Share** → ubah akses menjadi **Anyone with the link** → **Viewer** → **Done**
+1. Klik **Authentication** → **Providers** → **Email**
+2. Pastikan **Enable Email provider** aktif (ON)
+3. **Matikan** opsi "Confirm email" (agar tidak perlu konfirmasi email):
+   - Klik **Authentication** → **Settings**
+   - Cari **"Enable email confirmations"** → matikan (OFF)
+4. Klik **Save**
 
 ---
 
-## Langkah 3: Upload ke GitHub Pages
+## Langkah 2: Upload ke GitHub
 
-### 3a. Buat Repository GitHub
+### 2a. Buat Repository
 
 1. Buka **https://github.com** → login
-2. Klik **+** di pojok kanan atas → **New repository**
-3. Isi:
-   - **Repository name**: `rekap-sdi` (atau nama lain yang mudah diingat)
+2. Klik **+** → **New repository**
+   - Name: `rekap-sdi`
    - Centang **Public**
    - Centang **Add a README file**
-4. Klik **Create repository**
+3. Klik **Create repository**
 
-### 3b. Upload File
+### 2b. Upload File
 
-1. Di halaman repository, klik **Add file** → **Upload files**
-2. Upload ketiga file:
-   - `index.html`
-   - `admin.html`
-   - `README.md` (file ini)
+1. Di repository → **Add file** → **Upload files**
+2. Upload: `index.html`, `admin.html`, `README.md`
 3. Klik **Commit changes**
 
-### 3c. Aktifkan GitHub Pages
+### 2c. Aktifkan GitHub Pages
 
-1. Di repository, klik **Settings** (tab di atas)
-2. Di sidebar kiri, klik **Pages**
-3. Di bagian **Source**, pilih **Deploy from a branch**
-4. Branch: pilih **main** → folder: **/ (root)**
-5. Klik **Save**
-6. Tunggu 1-2 menit
-7. Akan muncul URL: `https://NAMA_AKUN.github.io/rekap-sdi/`
+1. **Settings** → **Pages**
+2. Source: **Deploy from a branch** → branch: **main** → folder: **/ (root)**
+3. **Save**
+4. Tunggu 1-2 menit → URL: `https://NAMA.github.io/rekap-sdi/`
 
 ---
 
-## Langkah 4: Isi Konfigurasi di Kode
+## Langkah 3: Isi Konfigurasi
 
-Ini langkah paling penting. Anda perlu mengubah beberapa baris di file `index.html` dan `admin.html`.
+Edit `index.html` dan `admin.html` di GitHub (klik file → ikon pensil).
 
-### Cara Edit di GitHub
+**Cari bagian `CFG = {` dan ubah:**
 
-1. Di repository GitHub, klik file `index.html`
-2. Klik ikon pensil (Edit) di kanan atas
-3. Cari bagian `CONFIG` (sekitar baris 190-220)
-4. Ubah nilai-nilai berikut:
-
-**Di `index.html`:**
+### Di `index.html`:
 ```javascript
-const CONFIG = {
-  supabaseUrl: 'https://XXXXX.supabase.co',  // ← ganti XXXXX
-  supabaseKey: 'eyJhbGci...',                 // ← paste anon key Supabase
-  googleClientId: '123456-abc.apps.googleusercontent.com', // ← dari langkah 2c
-  googleDriveFolderId: '1ABC123def456XYZ',    // ← ID folder Drive dari langkah 2e
-  kabupatenKota: 'Kabupaten Pesawaran',       // ← ganti nama kabupaten/kota Anda
-
-  opd: [
-    'Dinas Kesehatan',
-    'Dinas Kependudukan dan Pencatatan Sipil',
-    // ... tambah/hapus sesuai OPD di wilayah Anda
-  ],
-
+const CFG = {
+  supabaseUrl: 'https://XXXXX.supabase.co',  // ← URL Supabase Anda
+  supabaseKey: 'eyJhbGci...',                 // ← anon key Supabase
+  kabupaten: 'Kabupaten Pesawaran',           // ← nama kabupaten/kota Anda
   indikator: [
-    { kode: '10101', nama: 'Tingkat Kematangan Penerapan Standar Data Statistik (SDS)' },
-    // ... sesuaikan dengan indikator yang dinilai
+    // sesuaikan dengan indikator yang dinilai
   ]
 };
 ```
 
-**Di `admin.html`:**
+### Di `admin.html`:
 ```javascript
-const CONFIG = {
-  supabaseUrl: 'https://XXXXX.supabase.co',  // ← sama dengan index.html
-  supabaseKey: 'eyJhbGci...',                // ← sama dengan index.html
-  adminPassword: 'passwordKominfo2024',       // ← GANTI dengan password pilihan Anda
-  kabupatenKota: 'Kabupaten Pesawaran',       // ← sama
-  totalOpd: 14,                               // ← total jumlah OPD di wilayah Anda
+const CFG = {
+  supabaseUrl: 'https://XXXXX.supabase.co',  // ← sama
+  supabaseKey: 'eyJhbGci...',                // ← sama
+  adminPassword: 'passwordKominfo2024',       // ← GANTI password admin
+  kabupaten: 'Kabupaten Pesawaran',
+  totalOpd: 14,                               // ← total OPD di wilayah Anda
+  opd: ['Dinas Kesehatan', ...],              // ← sesuaikan
+  indikator: [...]
 };
 ```
 
-5. Setelah selesai edit, klik **Commit changes** → **Commit changes**
+Setelah edit → **Commit changes**
 
 ---
 
-## Langkah 5: Test Sistem
+## Langkah 4: Buat Akun untuk Setiap OPD
 
-### Test halaman OPD:
-1. Buka: `https://NAMA_AKUN.github.io/rekap-sdi/`
-2. Klik **Masuk dengan Google**
-3. Login dengan akun Google OPD
-4. Isi form, upload PDF, tandai halaman
-5. Klik Kirim — harus muncul pesan sukses
+1. Buka: `https://NAMA.github.io/rekap-sdi/admin.html`
+2. Masukkan password admin
+3. Klik tab **Kelola Akun OPD**
+4. Klik **+ Tambah Akun OPD**
+5. Isi:
+   - Nama OPD (pilih dari dropdown)
+   - Username (cth: `dinkes_pesawaran`)
+   - Email internal (cth: `dinkes@pesawaran.internal` — tidak harus email nyata/aktif)
+   - Password (minimal 8 karakter)
+6. Klik **Buat Akun**
+7. Ulangi untuk setiap OPD
 
-### Test halaman Admin:
-1. Buka: `https://NAMA_AKUN.github.io/rekap-sdi/admin.html`
-2. Masukkan password yang Anda set di CONFIG
-3. Cek apakah dokumen test dari langkah sebelumnya muncul
-4. Klik sebuah indikator di sidebar → klik **Generate PDF**
-5. File harus terunduh otomatis
+> **Catatan:** Jika muncul error saat buat akun, buat user manual via Supabase Dashboard:
+> Authentication → Users → **Add User** → isi email & password yang sama → klik Confirm.
+> Lalu isi `user_id` di tabel `opd_users` dengan ID user yang baru dibuat.
 
----
+### Cara membuat user di Supabase Dashboard (cara paling andal):
 
-## Cara Pakai Sehari-hari
-
-### Untuk Operator OPD:
-1. Buka link sistem (bagikan URL `index.html` ke semua OPD)
-2. Login dengan akun Google instansi
-3. Isi form: pilih OPD, pilih indikator, tulis nama dokumen
-4. Upload file PDF
-5. Tandai nomor halaman penting (1-5 halaman yang paling mewakili bukti)
-6. Tambahkan catatan jika perlu
-7. Klik Kirim
-
-### Untuk Admin Kominfo:
-1. Buka link admin
-2. Masukkan password
-3. Lihat semua dokumen masuk di dashboard
-4. Monitor progress upload per indikator di sidebar
-5. Klik nama indikator → klik **Generate PDF** atau **Generate DOCX**
-6. File rekap otomatis terunduh
-7. Bisa juga klik **Review** per dokumen untuk menandai sudah diperiksa
+1. Supabase → **Authentication** → **Users** → **Add user** → **Create new user**
+2. Isi email (cth: `dinkes@pesawaran.internal`) dan password
+3. Klik **Create User**
+4. Salin **User UID** yang muncul
+5. Pergi ke **Table Editor** → tabel `opd_users` → **Insert row**:
+   - `user_id`: paste UID dari langkah 4
+   - `username`: `dinkes_pesawaran`
+   - `email`: `dinkes@pesawaran.internal`
+   - `opd_name`: `Dinas Kesehatan`
+6. **Save**
 
 ---
 
-## Pertanyaan Umum
+## Langkah 5: Bagikan ke OPD
 
-**Q: Apakah OPD harus login dengan email pemerintah?**
-A: Tidak harus, bisa akun Google manapun. Namun disarankan pakai akun instansi agar tercatat dengan benar.
+Kirimkan ke setiap OPD:
+- **Link sistem**: `https://NAMA.github.io/rekap-sdi/`
+- **Username**: (sesuai yang dibuat)
+- **Password**: (sesuai yang dibuat)
+- **Panduan upload**: (lihat bagian bawah)
 
-**Q: Bagaimana kalau file PDF besar, lama uploadnya?**
-A: File terkirim langsung ke Google Drive OPD yang login, bukan melalui server. Kecepatan upload tergantung koneksi internet OPD.
+---
 
-**Q: Apakah data aman?**
-A: Metadata tersimpan di Supabase (terenkripsi). File PDF tersimpan di Google Drive Kominfo. Hanya yang punya link yang bisa mengakses.
+## Panduan Upload untuk OPD
 
-**Q: Bagaimana kalau OPD upload dokumen salah?**
-A: Admin Kominfo bisa hapus dokumen langsung dari Supabase dashboard (https://supabase.com → Table Editor → bukti_dukung → hapus baris yang salah). OPD kemudian bisa upload ulang.
+### Cara upload dokumen:
+1. Buka link sistem yang diberikan Kominfo
+2. Login dengan username dan password
+3. Pilih **Kode Indikator** yang sesuai
+4. Isi **Nama Dokumen** (judul lengkap dokumen)
+5. Upload PDF ke **Google Drive** Anda:
+   - Buka drive.google.com
+   - Upload file PDF
+   - Klik kanan file → **Share** → ubah akses ke **"Anyone with the link"** → **Copy link**
+6. Paste link Google Drive di kolom yang tersedia
+7. Tandai **nomor halaman penting** (1–5 halaman yang paling membuktikan)
+8. Klik **Kirim**
+
+---
+
+## Cara Pakai (Kominfo)
+
+1. Buka `admin.html` → masukkan password
+2. Lihat semua dokumen di tab **Dokumen Masuk**
+3. Klik nama indikator di sidebar kiri untuk filter per indikator
+4. Monitor progress upload OPD (progress bar otomatis muncul)
+5. Klik **Generate PDF** atau **Generate DOCX** → file rekap terunduh
+6. Klik **Buka** pada setiap dokumen untuk lihat file asli di Drive
+7. Klik **Review** untuk tandai dokumen sudah diperiksa
+8. Klik **Hapus** jika ada dokumen yang perlu dihapus (OPD bisa upload ulang)
+
+---
+
+## FAQ
+
+**Q: Apakah perlu email OPD yang aktif?**
+A: Tidak. Email hanya dipakai sebagai ID login di sistem, tidak dikirim email apapun. Bisa pakai format `namaopd@pesawaran.internal`.
+
+**Q: Bagaimana jika OPD lupa password?**
+A: Admin Kominfo hapus akun lama di dashboard, buat ulang akun baru dengan password baru.
+
+**Q: Apakah dokumen PDF tersimpan di server?**
+A: Tidak. PDF tersimpan di Google Drive OPD masing-masing. Sistem hanya menyimpan link-nya.
 
 **Q: Bisa dipakai untuk kabupaten/kota lain?**
-A: Bisa. Cukup fork repository GitHub, ubah CONFIG di kedua file (nama kabupaten, daftar OPD, daftar indikator, password admin), deploy ulang.
+A: Bisa. Fork repository GitHub, ubah CONFIG (nama kabupaten, daftar OPD, indikator, password admin), deploy ulang. Satu Supabase project bisa untuk beberapa kabupaten/kota sekaligus dengan menambahkan kolom `kabupaten`.
 
-**Q: Thumbnail halaman PDF tidak muncul di rekap?**
-A: Ini terjadi karena Google Drive membatasi akses langsung ke file PDF dari browser (CORS). Rekap tetap berisi semua informasi dokumen dan link langsung ke Drive. Untuk mengatasi ini, bisa menggunakan Google Apps Script sebagai proxy — hubungi pengembang jika diperlukan.
-
----
-
-## Bantuan & Kontak
-
-Jika ada kendala teknis saat setup, catat:
-1. Langkah mana yang bermasalah
-2. Pesan error yang muncul (screenshot jika bisa)
-
-Lalu minta bantuan dengan informasi tersebut.
+**Q: Kenapa thumbnail halaman PDF tidak muncul di rekap?**
+A: File PDF tersimpan di Google Drive OPD, dan browser tidak bisa langsung merender halaman PDF dari Drive karena pembatasan keamanan. Rekap tetap memuat semua informasi + link langsung ke Drive. Penilai klik link → langsung ke dokumen asli, bisa navigasi ke halaman yang ditandai.
 
 ---
 
-*Sistem ini dibuat dengan GitHub Pages + Supabase + Google Drive. Semua komponen menggunakan tier gratis.*
+*Sistem ini sepenuhnya gratis: GitHub Pages + Supabase free tier + Google Drive pribadi OPD.*
