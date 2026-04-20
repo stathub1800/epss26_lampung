@@ -1,52 +1,37 @@
 # Sistem Rekap Bukti Dukung SDI
-**Panduan Setup — Versi Tanpa Google OAuth (Lebih Mudah)**
+**Streamlit + Supabase + Auto Screenshot PDF**
 
 ---
 
-## Komponen Sistem
+## 🎯 Fitur Utama
+
+✅ **Auto-screenshot halaman PDF** — Python otomatis ambil screenshot halaman yang ditandai OPD
+✅ **Generate PDF rekap 1 klik** — dengan thumbnail halaman penting dari semua OPD
+✅ **Login username/password** — tanpa Google OAuth
+✅ **Upload via Google Drive** — OPD upload sendiri, Streamlit download & screenshot
+✅ **Dashboard lengkap** — statistik, filter, review dokumen
+✅ **Kelola akun OPD** — admin buat username/password untuk setiap OPD
+✅ **Deploy gratis** — Streamlit Cloud (online) atau localhost
+
+---
+
+## 🧩 Komponen
 
 | Komponen | Fungsi | Biaya |
 |---|---|---|
-| **GitHub Pages** | Hosting semua halaman web | Gratis |
-| **Supabase** | Database + sistem login username/password | Gratis |
-| **Google Drive** | OPD simpan file PDF sendiri, paste link ke form | Gratis |
-
-> Tidak ada Google OAuth, tidak ada Google Cloud Console — jauh lebih sederhana.
-
----
-
-## Alur Kerja
-
-1. **Kominfo** buat akun untuk setiap OPD di dashboard admin
-2. **OPD** terima username + password dari Kominfo
-3. **OPD** upload PDF ke Google Drive mereka sendiri → salin link → paste di form
-4. **Kominfo** buka dashboard → pilih indikator → klik Generate → file rekap terunduh
+| **Streamlit Cloud** | Hosting aplikasi web Python | Gratis |
+| **Supabase** | Database + autentikasi | Gratis |
+| **Google Drive** | OPD simpan PDF, sistem download otomatis | Gratis |
+| **PyMuPDF** | Screenshot halaman PDF jadi gambar | Open source |
 
 ---
 
-## Langkah 1: Setup Supabase
+## 📋 Langkah Setup
 
-### 1a. Buat Project
+### 1. Setup Supabase (sama seperti sebelumnya)
 
-1. Buka **https://supabase.com** → **Start your project**
-2. Daftar / login
-3. Klik **New Project**
-   - Name: `rekap-sdi` (atau nama lain)
-   - Database Password: buat password kuat, simpan
-   - Region: **Southeast Asia (Singapore)**
-4. Tunggu ~2 menit
-
-### 1b. Salin URL dan Key
-
-1. Klik **Settings** → **API**
-2. Salin:
-   - **Project URL** → `https://xxxxxx.supabase.co`
-   - **anon / public key** → string panjang `eyJ...`
-
-### 1c. Buat Tabel Database
-
-1. Klik **SQL Editor** → **New query**
-2. Copy-paste SQL berikut → klik **Run**:
+1. Buka **https://supabase.com** → buat project baru
+2. **SQL Editor** → jalankan SQL berikut:
 
 ```sql
 -- Tabel profil akun OPD
@@ -73,10 +58,11 @@ create table bukti_dukung (
   submitted_by text,
   status text default 'pending',
   kabupaten text,
-  user_id text
+  has_screenshots boolean default false,
+  screenshot_count int default 0
 );
 
--- Izin akses (Row Level Security)
+-- Row Level Security
 alter table opd_users enable row level security;
 alter table bukti_dukung enable row level security;
 
@@ -85,170 +71,222 @@ create policy "opd_users_select_anon" on opd_users for select to anon using (tru
 create policy "bukti_dukung_all" on bukti_dukung for all to authenticated using (true) with check (true);
 ```
 
-3. Harus muncul "Success. No rows returned"
+3. **Settings** → **API** → salin:
+   - **Project URL**
+   - **anon / public key**
 
-### 1d. Aktifkan Email Auth (untuk login username/password)
-
-1. Klik **Authentication** → **Providers** → **Email**
-2. Pastikan **Enable Email provider** aktif (ON)
-3. **Matikan** opsi "Confirm email" (agar tidak perlu konfirmasi email):
-   - Klik **Authentication** → **Settings**
-   - Cari **"Enable email confirmations"** → matikan (OFF)
-4. Klik **Save**
+4. **Authentication** → **Providers** → **Email** → pastikan ON
+5. **Authentication** → **Settings** → matikan **"Enable email confirmations"**
 
 ---
 
-## Langkah 2: Upload ke GitHub
+### 2. Setup Streamlit Cloud (Deploy Online)
 
-### 2a. Buat Repository
+#### A. Buat Repository GitHub
 
 1. Buka **https://github.com** → login
-2. Klik **+** → **New repository**
-   - Name: `rekap-sdi`
-   - Centang **Public**
-   - Centang **Add a README file**
-3. Klik **Create repository**
+2. **New repository**:
+   - Name: `rekap-sdi-streamlit`
+   - Public
+   - ✅ Add README
+3. Upload file:
+   - `app.py`
+   - `requirements.txt`
+   - `README.md` (file ini)
 
-### 2b. Upload File
+#### B. Deploy ke Streamlit Cloud
 
-1. Di repository → **Add file** → **Upload files**
-2. Upload: `index.html`, `admin.html`, `README.md`
-3. Klik **Commit changes**
+1. Buka **https://share.streamlit.io** → login dengan GitHub
+2. Klik **New app**
+3. Pilih:
+   - Repository: `rekap-sdi-streamlit`
+   - Branch: `main`
+   - Main file: `app.py`
+4. **Advanced settings** → klik **Secrets**
+5. Paste konfigurasi berikut (ganti dengan nilai Anda):
 
-### 2c. Aktifkan GitHub Pages
+```toml
+SUPABASE_URL = "https://xxxxx.supabase.co"
+SUPABASE_KEY = "eyJhbGci..."
+ADMIN_PASSWORD = "passwordKominfo2024"
+```
 
-1. **Settings** → **Pages**
-2. Source: **Deploy from a branch** → branch: **main** → folder: **/ (root)**
-3. **Save**
-4. Tunggu 1-2 menit → URL: `https://NAMA.github.io/rekap-sdi/`
+6. Klik **Deploy**
+7. Tunggu 2-3 menit → app akan jalan di URL: `https://NAMA-APP.streamlit.app`
 
 ---
 
-## Langkah 3: Isi Konfigurasi
+### 3. Setup Localhost (Alternatif — Jalankan di Komputer Sendiri)
 
-Edit `index.html` dan `admin.html` di GitHub (klik file → ikon pensil).
+Jika tidak ingin deploy online, bisa jalankan lokal:
 
-**Cari bagian `CFG = {` dan ubah:**
+```bash
+# 1. Install Python 3.9+ dari python.org
 
-### Di `index.html`:
-```javascript
-const CFG = {
-  supabaseUrl: 'https://XXXXX.supabase.co',  // ← URL Supabase Anda
-  supabaseKey: 'eyJhbGci...',                 // ← anon key Supabase
-  kabupaten: 'Kabupaten Pesawaran',           // ← nama kabupaten/kota Anda
-  indikator: [
-    // sesuaikan dengan indikator yang dinilai
-  ]
-};
+# 2. Buat folder project
+mkdir rekap-sdi
+cd rekap-sdi
+
+# 3. Simpan file app.py, requirements.txt
+
+# 4. Edit app.py baris 13-15, ganti dengan nilai Supabase Anda:
+# SUPABASE_URL = "https://xxxxx.supabase.co"
+# SUPABASE_KEY = "eyJhbGci..."
+# ADMIN_PASSWORD = "admin123"
+
+# 5. Install dependencies
+pip install -r requirements.txt
+
+# 6. Jalankan aplikasi
+streamlit run app.py
 ```
 
-### Di `admin.html`:
-```javascript
-const CFG = {
-  supabaseUrl: 'https://XXXXX.supabase.co',  // ← sama
-  supabaseKey: 'eyJhbGci...',                // ← sama
-  adminPassword: 'passwordKominfo2024',       // ← GANTI password admin
-  kabupaten: 'Kabupaten Pesawaran',
-  totalOpd: 14,                               // ← total OPD di wilayah Anda
-  opd: ['Dinas Kesehatan', ...],              // ← sesuaikan
-  indikator: [...]
-};
-```
-
-Setelah edit → **Commit changes**
+Buka browser: **http://localhost:8501**
 
 ---
 
-## Langkah 4: Buat Akun untuk Setiap OPD
+## 🚀 Cara Pakai
 
-1. Buka: `https://NAMA.github.io/rekap-sdi/admin.html`
+### Untuk Admin Kominfo:
+
+1. Buka app → **Login sebagai Admin Kominfo**
 2. Masukkan password admin
-3. Klik tab **Kelola Akun OPD**
-4. Klik **+ Tambah Akun OPD**
-5. Isi:
-   - Nama OPD (pilih dari dropdown)
-   - Username (cth: `dinkes_pesawaran`)
-   - Email internal (cth: `dinkes@pesawaran.internal` — tidak harus email nyata/aktif)
-   - Password (minimal 8 karakter)
-6. Klik **Buat Akun**
-7. Ulangi untuk setiap OPD
+3. **Tab "Kelola Akun OPD"** → buat akun untuk setiap OPD:
+   - Pilih nama OPD
+   - Username: `dinkes_pesawaran` (huruf kecil, underscore)
+   - Email: `dinkes@pesawaran.internal` (tidak harus email aktif)
+   - Password: min. 8 karakter
+4. Bagikan username + password ke masing-masing OPD
 
-> **Catatan:** Jika muncul error saat buat akun, buat user manual via Supabase Dashboard:
-> Authentication → Users → **Add User** → isi email & password yang sama → klik Confirm.
-> Lalu isi `user_id` di tabel `opd_users` dengan ID user yang baru dibuat.
+### Untuk OPD:
 
-### Cara membuat user di Supabase Dashboard (cara paling andal):
+1. Buka app → **Login sebagai OPD**
+2. Masukkan username & password dari Kominfo
+3. **Form Upload Dokumen**:
+   - Pilih indikator
+   - Nama dokumen
+   - Upload PDF ke **Google Drive Anda** → Share → **"Anyone with the link"** → Copy link → paste
+   - Tandai halaman penting (pisah koma): `1,3,7`
+   - (Opsional) Keterangan per halaman (pisah `|`): `Cover|Tabel|Tanda tangan`
+   - Klik **Kirim**
+4. Sistem akan:
+   - Download PDF dari Drive Anda
+   - **Auto-screenshot halaman yang ditandai**
+   - Simpan ke database
+   - Tampilkan preview screenshot
 
-1. Supabase → **Authentication** → **Users** → **Add user** → **Create new user**
-2. Isi email (cth: `dinkes@pesawaran.internal`) dan password
-3. Klik **Create User**
-4. Salin **User UID** yang muncul
-5. Pergi ke **Table Editor** → tabel `opd_users` → **Insert row**:
-   - `user_id`: paste UID dari langkah 4
+### Generate Rekap:
+
+1. Admin login
+2. **Tab "Dokumen Masuk"**
+3. Filter indikator yang ingin direkap
+4. Klik **🔴 Generate PDF Rekap**
+5. Sistem akan:
+   - Download semua PDF dari Drive
+   - Screenshot halaman penting (jika belum ada)
+   - Susun jadi 1 PDF rekap lengkap dengan thumbnail
+   - File otomatis terunduh
+
+---
+
+## 📸 Screenshot Otomatis
+
+**Cara kerjanya:**
+
+1. OPD paste link Google Drive → tandai halaman (cth: `1,3,7`)
+2. Saat OPD klik **Kirim**:
+   - Streamlit download PDF dari Drive (pakai library `gdown`)
+   - PyMuPDF buka PDF → ekstrak halaman 1, 3, 7
+   - Convert jadi gambar PNG (resolusi tinggi)
+   - Simpan metadata ke database: `has_screenshots: true`
+3. Saat Admin generate rekap:
+   - Streamlit ambil semua screenshot yang sudah tersimpan
+   - Susun jadi thumbnail di PDF rekap
+   - Tambahkan label halaman + keterangan
+
+**Keunggulan vs JavaScript di browser:**
+- ✅ Python bisa download langsung dari Google Drive
+- ✅ PyMuPDF render PDF server-side (tidak ada batasan CORS)
+- ✅ Screenshot resolusi tinggi, hasil profesional
+- ✅ Bisa batch processing banyak PDF sekaligus
+
+---
+
+## 🔧 Troubleshooting
+
+### "Error download PDF dari Google Drive"
+
+**Solusi:**
+1. Pastikan link sudah diset **"Anyone with the link"** di Google Drive
+2. Cek link mengandung `/file/d/` atau `id=`
+3. Coba buka link di browser incognito — harus bisa download tanpa login
+
+### "Gagal membuat akun OPD"
+
+**Solusi manual via Supabase Dashboard:**
+1. Supabase → **Authentication** → **Users** → **Add user**
+2. Isi email & password → **Create User**
+3. Salin **User UID**
+4. **Table Editor** → `opd_users` → **Insert row**:
+   - `user_id`: paste UID
    - `username`: `dinkes_pesawaran`
-   - `email`: `dinkes@pesawaran.internal`
+   - `email`: sama dengan di step 2
    - `opd_name`: `Dinas Kesehatan`
-6. **Save**
+
+### "Screenshot gagal / tidak muncul"
+
+Kemungkinan:
+- PDF dilindungi password → minta OPD upload versi tanpa password
+- PDF corrupt → minta OPD upload ulang
+- File terlalu besar (>100MB) → minta OPD compress dulu
 
 ---
 
-## Langkah 5: Bagikan ke OPD
+## 💡 Kelebihan Sistem Ini
 
-Kirimkan ke setiap OPD:
-- **Link sistem**: `https://NAMA.github.io/rekap-sdi/`
-- **Username**: (sesuai yang dibuat)
-- **Password**: (sesuai yang dibuat)
-- **Panduan upload**: (lihat bagian bawah)
-
----
-
-## Panduan Upload untuk OPD
-
-### Cara upload dokumen:
-1. Buka link sistem yang diberikan Kominfo
-2. Login dengan username dan password
-3. Pilih **Kode Indikator** yang sesuai
-4. Isi **Nama Dokumen** (judul lengkap dokumen)
-5. Upload PDF ke **Google Drive** Anda:
-   - Buka drive.google.com
-   - Upload file PDF
-   - Klik kanan file → **Share** → ubah akses ke **"Anyone with the link"** → **Copy link**
-6. Paste link Google Drive di kolom yang tersedia
-7. Tandai **nomor halaman penting** (1–5 halaman yang paling membuktikan)
-8. Klik **Kirim**
+✅ **Tidak perlu Google Cloud Console** — langsung download dari Drive public link
+✅ **Screenshot otomatis server-side** — tidak tergantung browser user
+✅ **Deploy gratis selamanya** — Streamlit Cloud + Supabase free tier
+✅ **Bisa diakses dari mana saja** — online 24/7
+✅ **Satu aplikasi untuk semua** — OPD & Admin dalam 1 app
+✅ **Database cloud** — data aman, tersinkron
+✅ **Bisa untuk banyak kabupaten/kota** — tinggal ganti CONFIG
 
 ---
 
-## Cara Pakai (Kominfo)
+## 📝 Catatan Penting
 
-1. Buka `admin.html` → masukkan password
-2. Lihat semua dokumen di tab **Dokumen Masuk**
-3. Klik nama indikator di sidebar kiri untuk filter per indikator
-4. Monitor progress upload OPD (progress bar otomatis muncul)
-5. Klik **Generate PDF** atau **Generate DOCX** → file rekap terunduh
-6. Klik **Buka** pada setiap dokumen untuk lihat file asli di Drive
-7. Klik **Review** untuk tandai dokumen sudah diperiksa
-8. Klik **Hapus** jika ada dokumen yang perlu dihapus (OPD bisa upload ulang)
+1. **Streamlit Cloud gratis** tapi ada limit:
+   - 1 app bisa idle otomatis jika tidak diakses 7 hari
+   - Maksimal 1GB RAM (cukup untuk sistem ini)
+   - Bisa upgrade ke paid jika perlu
 
----
+2. **Supabase gratis** tapi ada limit:
+   - 500MB database (cukup untuk ribuan dokumen)
+   - 50,000 monthly active users
+   - 2GB bandwidth/bulan
 
-## FAQ
+3. **Alternative deploy:**
+   - Heroku (gratis dengan kartu kredit)
+   - Railway (gratis $5/bulan credit)
+   - Google Cloud Run (gratis tier tersedia)
+   - VPS sendiri (DigitalOcean, Vultr, dll)
 
-**Q: Apakah perlu email OPD yang aktif?**
-A: Tidak. Email hanya dipakai sebagai ID login di sistem, tidak dikirim email apapun. Bisa pakai format `namaopd@pesawaran.internal`.
-
-**Q: Bagaimana jika OPD lupa password?**
-A: Admin Kominfo hapus akun lama di dashboard, buat ulang akun baru dengan password baru.
-
-**Q: Apakah dokumen PDF tersimpan di server?**
-A: Tidak. PDF tersimpan di Google Drive OPD masing-masing. Sistem hanya menyimpan link-nya.
-
-**Q: Bisa dipakai untuk kabupaten/kota lain?**
-A: Bisa. Fork repository GitHub, ubah CONFIG (nama kabupaten, daftar OPD, indikator, password admin), deploy ulang. Satu Supabase project bisa untuk beberapa kabupaten/kota sekaligus dengan menambahkan kolom `kabupaten`.
-
-**Q: Kenapa thumbnail halaman PDF tidak muncul di rekap?**
-A: File PDF tersimpan di Google Drive OPD, dan browser tidak bisa langsung merender halaman PDF dari Drive karena pembatasan keamanan. Rekap tetap memuat semua informasi + link langsung ke Drive. Penilai klik link → langsung ke dokumen asli, bisa navigasi ke halaman yang ditandai.
+4. **Backup data:**
+   - Export dari Supabase → **Database** → **Backups**
+   - Download manual jadi SQL file
 
 ---
 
-*Sistem ini sepenuhnya gratis: GitHub Pages + Supabase free tier + Google Drive pribadi OPD.*
+## 🎓 Pengembangan Lanjutan
+
+Bisa ditambahkan:
+- Export rekap ke Word (.docx) dengan `python-docx`
+- Email notifikasi ke Kominfo saat OPD upload (pakai SendGrid/Mailgun)
+- Dashboard analytics dengan chart progress per OPD
+- OCR untuk PDF hasil scan (pakai `pytesseract`)
+- Multi-tenant untuk beberapa kabupaten/kota dalam 1 app
+
+---
+
+*Sistem ini dibuat dengan Python + Streamlit + Supabase. Semua gratis dan open source.*
