@@ -37,6 +37,13 @@ INDIKATOR = [
 ]
 # ==================================
 
+# Inisialisasi Supabase
+sb: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# Setup folders
+Path("temp_pdfs").mkdir(exist_ok=True)
+Path("temp_screenshots").mkdir(exist_ok=True)
+
 # Page config
 st.set_page_config(
     page_title="Sistem Rekap Bukti Dukung SDI",
@@ -44,20 +51,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
-# Inisialisasi Supabase
-sb: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-# ---> PERBAIKAN: Pulihkan sesi auth Supabase agar Streamlit tidak lupa status login <---
-if 'sb_access_token' in st.session_state and 'sb_refresh_token' in st.session_state:
-    try:
-        sb.auth.set_session(st.session_state.sb_access_token, st.session_state.sb_refresh_token)
-    except Exception:
-        pass # Abaikan jika token expired, user akan diminta login ulang
-
-# Setup folders
-Path("temp_pdfs").mkdir(exist_ok=True)
-Path("temp_screenshots").mkdir(exist_ok=True)
 
 # Custom CSS
 st.markdown("""
@@ -239,7 +232,7 @@ def generate_pdf_rekap(docs, title, kabupaten, tahun, catatan=""):
                         label = f"Hal. {screenshot_data['page']}"
                         if page_info.get('label'):
                             label += f" - {page_info['label']}"
-                        pdf.cell(90, 6, align='C', fill=True, text=label)
+                        pdf.cell(90, 6, label, align='C', fill=True)
                         
                         x_pos += 95
                         
@@ -303,11 +296,6 @@ def login_page():
                             st.session_state.user_role = "opd"
                             st.session_state.user_opd = user['opd_name']
                             st.session_state.username = username
-                            
-                            # ---> PERBAIKAN: Simpan token ke session state Streamlit <---
-                            st.session_state.sb_access_token = auth_result.session.access_token
-                            st.session_state.sb_refresh_token = auth_result.session.refresh_token
-                            
                             st.rerun()
                         else:
                             st.error("Password salah")
@@ -334,18 +322,8 @@ def opd_dashboard():
     with st.sidebar:
         st.markdown("### 👤 Informasi")
         st.info(f"**OPD:** {st.session_state.user_opd}")
-        
-        # ---> PERBAIKAN LOGOUT OPD <---
         if st.button("Logout", use_container_width=True):
             st.session_state.authenticated = False
-            if 'sb_access_token' in st.session_state:
-                del st.session_state['sb_access_token']
-            if 'sb_refresh_token' in st.session_state:
-                del st.session_state['sb_refresh_token']
-            try:
-                sb.auth.sign_out()
-            except:
-                pass
             st.rerun()
     
     # Form Upload
@@ -464,18 +442,8 @@ def admin_dashboard():
         menu = st.radio("Pilih Menu:", ["📊 Dokumen Masuk", "👥 Kelola Akun OPD"], label_visibility="collapsed")
         
         st.markdown("---")
-        
-        # ---> PERBAIKAN LOGOUT ADMIN <---
         if st.button("Logout", use_container_width=True):
             st.session_state.authenticated = False
-            if 'sb_access_token' in st.session_state:
-                del st.session_state['sb_access_token']
-            if 'sb_refresh_token' in st.session_state:
-                del st.session_state['sb_refresh_token']
-            try:
-                sb.auth.sign_out()
-            except:
-                pass
             st.rerun()
     
     if menu == "📊 Dokumen Masuk":
