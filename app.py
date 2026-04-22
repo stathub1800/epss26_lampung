@@ -574,7 +574,7 @@ def admin_dokumen_page():
     if len(filtered_docs) == 0:
         st.info("Belum ada dokumen untuk filter ini")
     else:
-        for doc in filtered_docs:
+        for idx, doc in enumerate(filtered_docs):
             with st.container():
                 st.markdown(f"""
                 <div class="doc-card">
@@ -599,18 +599,26 @@ def admin_dokumen_page():
                 
                 with col_doc2:
                     if doc.get('drive_link'):
-                        st.link_button("🔗 Buka di Drive", doc['drive_link'], use_container_width=True)
+                        st.link_button("🔗 Buka di Drive", doc['drive_link'], use_container_width=True, key=f"link_{idx}")
                 
                 with col_doc3:
                     if doc['status'] == 'pending':
-                        if st.button("✅ Review", key=f"rev_{doc['id']}", use_container_width=True):
-                            sb.table('bukti_dukung').update({"status": "reviewed"}).eq('id', doc['id']).execute()
-                            st.rerun()
+                        if st.button("✅ Review", key=f"rev_{idx}", use_container_width=True):
+                            try:
+                                sb.table('bukti_dukung').update({"status": "reviewed"}).eq('id', doc['id']).execute()
+                                st.success("✅ Status diubah ke Reviewed!")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Error: {str(e)}")
                 
                 with col_doc4:
-                    if st.button("🗑️ Hapus", key=f"del_{doc['id']}", use_container_width=True):
-                        sb.table('bukti_dukung').delete().eq('id', doc['id']).execute()
-                        st.rerun()
+                    if st.button("🗑️ Hapus", key=f"del_{idx}", use_container_width=True):
+                        try:
+                            sb.table('bukti_dukung').delete().eq('id', doc['id']).execute()
+                            st.success("🗑️ Dokumen dihapus!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error: {str(e)}")
                 
                 st.markdown("---")
 
