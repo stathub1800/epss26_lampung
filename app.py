@@ -279,13 +279,13 @@ def landing_page():
     col_logo, col_space, col_btn = st.columns([5, 4, 2])
     with col_logo:
         st.markdown(f"""
-        <div style="display: flex; align-items: center; gap: 12px; padding-top: 2px;">
-            <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);">
-                {SVG_LOGO.format(size=24)}
-            </div>
-            <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px;">Andan<span style="color: #2563eb;">Sektoral</span></h1>
-        </div>
-        """, unsafe_allow_html=True)
+<div style="display: flex; align-items: center; gap: 12px; padding-top: 2px;">
+    <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);">
+        {SVG_LOGO.format(size=24)}
+    </div>
+    <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px;">Andan<span style="color: #2563eb;">Sektoral</span></h1>
+</div>
+""", unsafe_allow_html=True)
     with col_btn:
         st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True) # micro-adjustment agar sejajar
         if st.button("🔑 Masuk / Login", type="primary", use_container_width=True):
@@ -445,16 +445,16 @@ def login_page():
     col_space1, col_login, col_space2 = st.columns([1, 1.5, 1])
     with col_login:
         st.markdown(f"""
-        <div style='background-color: white; padding: 40px; border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); margin-bottom: 20px; display: flex; flex-direction: column; align-items: center;'>
-            <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); margin-bottom: 15px;">
-                {SVG_LOGO.format(size=32)}
-            </div>
-            <h2 style='margin-top: 0; text-align: center; color: #1e293b; font-weight: 800; margin-bottom: 5px; font-size: 28px;'>Andan<span style="color: #2563eb;">Sektoral</span></h2>
-            <p style='text-align: center; color: #64748b; font-weight: 500; margin-bottom: 25px;'>Provinsi Lampung</p>
-            <div style="width: 100%; height: 1px; background-color: #e2e8f0; margin-bottom: 25px;"></div>
-            <p style='text-align: center; color: #475569; font-weight: 600; margin-bottom: 20px;'>Masuk ke Akun Anda</p>
-        </div>
-        """, unsafe_allow_html=True)
+<div style='background-color: white; padding: 40px; border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); margin-bottom: 20px; display: flex; flex-direction: column; align-items: center;'>
+    <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); margin-bottom: 15px;">
+        {SVG_LOGO.format(size=32)}
+    </div>
+    <h2 style='margin-top: 0; text-align: center; color: #1e293b; font-weight: 800; margin-bottom: 5px; font-size: 28px;'>Andan<span style="color: #2563eb;">Sektoral</span></h2>
+    <p style='text-align: center; color: #64748b; font-weight: 500; margin-bottom: 25px;'>Provinsi Lampung</p>
+    <div style="width: 100%; height: 1px; background-color: #e2e8f0; margin-bottom: 25px;"></div>
+    <p style='text-align: center; color: #475569; font-weight: 600; margin-bottom: 20px;'>Masuk ke Akun Anda</p>
+</div>
+""", unsafe_allow_html=True)
         
         role = st.selectbox("Masuk Sebagai:", ["Dinas (Lokus)", "Walidata (Kominfo)"])
         st.write("")
@@ -488,16 +488,16 @@ def login_page():
 
 def opd_dashboard():
     st.markdown(f"""
-    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">
-            {SVG_LOGO.format(size=28)}
-        </div>
-        <div>
-            <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2;">Andan<span style="color: #2563eb;">Sektoral</span></h1>
-            <p style="margin: 0; font-size: 14px; color: #64748b; font-weight: 500;">Panel Dinas (Lokus)</p>
-        </div>
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">
+        {SVG_LOGO.format(size=28)}
     </div>
-    """, unsafe_allow_html=True)
+    <div>
+        <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2;">Andan<span style="color: #2563eb;">Sektoral</span></h1>
+        <p style="margin: 0; font-size: 14px; color: #64748b; font-weight: 500;">Panel Dinas (Lokus)</p>
+    </div>
+</div>
+""", unsafe_allow_html=True)
     st.info(f"Login sebagai: **{st.session_state.opd_name}**")
     
     with st.sidebar:
@@ -567,16 +567,16 @@ def opd_dashboard():
 
 def admin_dashboard():
     st.markdown(f"""
-    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">
-            {SVG_LOGO.format(size=28)}
-        </div>
-        <div>
-            <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2;">Andan<span style="color: #2563eb;">Sektoral</span></h1>
-            <p style="margin: 0; font-size: 14px; color: #64748b; font-weight: 500;">Ruang Kerja Walidata (Kominfo)</p>
-        </div>
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">
+        {SVG_LOGO.format(size=28)}
     </div>
-    """, unsafe_allow_html=True)
+    <div>
+        <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2;">Andan<span style="color: #2563eb;">Sektoral</span></h1>
+        <p style="margin: 0; font-size: 14px; color: #64748b; font-weight: 500;">Ruang Kerja Walidata (Kominfo)</p>
+    </div>
+</div>
+""", unsafe_allow_html=True)
     
     with st.sidebar:
         if st.button("🚪 Logout", use_container_width=True):
@@ -632,12 +632,12 @@ def admin_dashboard():
         for doc in semua_dokumen:
             with st.container():
                 st.markdown(f"""
-                <div class="doc-card">
-                    <h4>{doc['opd_name']}</h4>
-                    <p style="margin-bottom: 5px;"><strong>Indikator:</strong> {doc['indikator_kode']} - {doc['indikator_nama']}</p>
-                    <p style="margin-bottom: 5px;"><strong>Dokumen:</strong> {doc['doc_name']} <a href="{doc['drive_link']}" target="_blank">(Buka Drive)</a></p>
-                </div>
-                """, unsafe_allow_html=True)
+<div class="doc-card">
+    <h4>{doc['opd_name']}</h4>
+    <p style="margin-bottom: 5px;"><strong>Indikator:</strong> {doc['indikator_kode']} - {doc['indikator_nama']}</p>
+    <p style="margin-bottom: 5px;"><strong>Dokumen:</strong> {doc['doc_name']} <a href="{doc['drive_link']}" target="_blank">(Buka Drive)</a></p>
+</div>
+""", unsafe_allow_html=True)
                 
                 with st.expander("Detail Halaman & Narasi"):
                     for p in doc.get('marked_pages', []):
