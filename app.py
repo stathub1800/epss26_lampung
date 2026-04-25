@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import requests
 import io
 import os
@@ -265,18 +266,97 @@ if 'auth_role' not in st.session_state:
     st.session_state.auth_role = None
 
 def login_page():
-    st.markdown("<h1 style='text-align: center;'>Portal Evaluasi SDI<br>Provinsi Lampung</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #2b5c8f; font-weight: 800;'>Portal Evaluasi SDI<br>Provinsi Lampung</h1>", unsafe_allow_html=True)
     st.write("---")
     
-    col1, col2, col3 = st.columns([1, 2, 1])
+    # HTML Infografis yang disematkan
+    infografis_html = """
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <style>
+            body { background-color: transparent; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+            .step-circle { width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; z-index: 10; font-size: 14px;}
+            .timeline-line { position: absolute; left: 17px; top: 35px; bottom: -35px; width: 2px; background-color: #cbd5e1; z-index: 0; }
+        </style>
+    </head>
+    <body class="p-1">
+        <div class="w-full bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
+            <div class="bg-gradient-to-r from-blue-900 to-blue-700 p-5 text-white text-center">
+                <h2 class="text-xl md:text-2xl font-extrabold mb-1 tracking-tight">Panduan Sistem</h2>
+                <p class="text-blue-200 text-sm font-medium">Sistem Rekapitulasi Otomatis Bukti Dukung SDI</p>
+            </div>
+            <div class="p-5 border-b border-gray-100">
+                <div class="flex flex-col md:flex-row items-center gap-4">
+                    <div class="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-laptop-code text-2xl text-blue-700"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 text-sm leading-relaxed">
+                            Aplikasi ini berfungsi untuk <strong>mengotomatisasi</strong> pembuatan laporan bukti dukung. Menyusun ratusan dokumen PDF dan mengambil <em>screenshot</em> halaman secara otomatis.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-5">
+                <h2 class="text-lg font-bold text-gray-800 mb-5 text-center">Alur Kerja (Proses Bisnis)</h2>
+                <div class="relative max-w-2xl mx-auto pb-2">
+                    <div class="relative flex items-start mb-5 group">
+                        <div class="timeline-line hidden md:block"></div>
+                        <div class="step-circle bg-emerald-100 text-emerald-700 flex-shrink-0 md:mr-4 mr-3 border-2 border-emerald-500">1</div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 flex-1">
+                            <h3 class="font-bold text-sm text-gray-800 mb-1"><i class="fa-brands fa-google-drive mr-2 text-gray-500"></i> Upload Drive (Oleh Dinas)</h3>
+                            <p class="text-gray-600 text-xs">Unggah dokumen ke Google Drive dan ubah setelan privasi menjadi "Siapa saja yang memiliki link".</p>
+                        </div>
+                    </div>
+                    <div class="relative flex items-start mb-5 group">
+                        <div class="timeline-line hidden md:block"></div>
+                        <div class="step-circle bg-emerald-100 text-emerald-700 flex-shrink-0 md:mr-4 mr-3 border-2 border-emerald-500">2</div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 flex-1">
+                            <h3 class="font-bold text-sm text-gray-800 mb-1"><i class="fa-solid fa-keyboard mr-2 text-gray-500"></i> Input Sistem (Oleh Dinas)</h3>
+                            <p class="text-gray-600 text-xs">Login ke sistem ini, masukkan Link Drive, lalu ketik target Halaman dan Narasinya.</p>
+                        </div>
+                    </div>
+                    <div class="relative flex items-start group">
+                        <div class="step-circle bg-blue-100 text-blue-700 flex-shrink-0 md:mr-4 mr-3 border-2 border-blue-500">3</div>
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 flex-1">
+                            <h3 class="font-bold text-sm text-gray-800 mb-1"><i class="fa-solid fa-gears mr-2 text-gray-500"></i> Generate Rekap (Oleh Walidata)</h3>
+                            <p class="text-gray-600 text-xs">Kominfo menekan tombol generate, sistem otomatis meng-screenshot dan membuat PDF Rekapitulasi untuk BPS.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+    # Membagi layout menjadi 2 kolom (Kiri Infografis 55%, Kanan Login 45%)
+    col1, spacer, col2 = st.columns([1.2, 0.1, 1])
+    
+    with col1:
+        # Menampilkan HTML Infografis di dalam iframe yang ter-scrollable
+        components.html(infografis_html, height=650, scrolling=True)
+
     with col2:
+        st.markdown("""
+        <div style='background-color: white; padding: 25px; border-radius: 10px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);'>
+            <h3 style='margin-top: 0; color: #1f2937;'><i class='fa-solid fa-lock'></i> Silakan Login</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.write("") # Spacer
         role = st.selectbox("Masuk Sebagai:", ["Dinas (Lokus)", "Walidata (Kominfo)"])
         
         if role == "Dinas (Lokus)":
             opd = st.selectbox("Pilih OPD", OPD_LIST)
             password = st.text_input("Password", type="password", placeholder="Masukkan password OPD")
             
-            if st.button("Masuk", use_container_width=True):
+            if st.button("Masuk", use_container_width=True, type="primary"):
                 # Validasi password berdasarkan OPD yang dipilih
                 if opd in OPD_PASSWORDS and password == OPD_PASSWORDS[opd]:
                     st.session_state.auth_role = "opd"
@@ -286,8 +366,8 @@ def login_page():
                     st.error("Password salah untuk instansi tersebut!")
                     
         elif role == "Walidata (Kominfo)":
-            password = st.text_input("Password Admin", type="password")
-            if st.button("Masuk Walidata", use_container_width=True):
+            password = st.text_input("Password Admin", type="password", placeholder="Masukkan password admin")
+            if st.button("Masuk Walidata", use_container_width=True, type="primary"):
                 if password == ADMIN_PASSWORD:
                     st.session_state.auth_role = "admin"
                     st.rerun()
