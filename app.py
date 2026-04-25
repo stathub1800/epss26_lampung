@@ -264,15 +264,8 @@ if 'auth_role' not in st.session_state:
 if 'show_login' not in st.session_state:
     st.session_state.show_login = False
 
-# Logo Perisai (Shield) + Grafik Batang di dalamnya
-SVG_LOGO = """
-<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-  <line x1="9" y1="15" x2="9" y2="12"></line>
-  <line x1="12" y1="15" x2="12" y2="9"></line>
-  <line x1="15" y1="15" x2="15" y2="13"></line>
-</svg>
-"""
+# Logo Perisai (Shield) + Grafik Batang di dalamnya (Diubah jadi 1 baris agar tidak merusak parser Markdown Streamlit)
+SVG_LOGO = '<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><line x1="9" y1="15" x2="9" y2="12"></line><line x1="12" y1="15" x2="12" y2="9"></line><line x1="15" y1="15" x2="15" y2="13"></line></svg>'
 
 def landing_page():
     # Bagian Header/Navbar Native Streamlit yang sejajar
