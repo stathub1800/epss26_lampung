@@ -14,7 +14,9 @@ import gdown
 # ========== KONFIGURASI ==========
 SUPABASE_URL = os.getenv("SUPABASE_URL", "GANTI_DENGAN_URL_SUPABASE_ANDA")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "GANTI_DENGAN_KEY_SUPABASE_ANDA")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "kominfo123") 
+
+# Password Admin diubah menjadi hardcode agar tidak error terbaca env variable yang kosong
+ADMIN_PASSWORD = "kominfo123"
 
 PROVINSI = "Provinsi Lampung"
 
