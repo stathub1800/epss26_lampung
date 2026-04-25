@@ -60,7 +60,7 @@ Path("temp_pdfs").mkdir(exist_ok=True)
 Path("temp_screenshots").mkdir(exist_ok=True)
 
 # Page config (Logo shield)
-st.set_page_config(page_title="Andan SDI Lampung", page_icon="🛡️", layout="wide")
+st.set_page_config(page_title="Andan Sektoral Lampung", page_icon="🛡️", layout="wide")
 
 # Custom CSS
 st.markdown("""
@@ -283,7 +283,7 @@ def landing_page():
             <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);">
                 {SVG_LOGO.format(size=24)}
             </div>
-            <h1 style="margin: 0; font-size: 26px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px;">Andan<span style="color: #2563eb;">SDI</span></h1>
+            <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px;">Andan<span style="color: #2563eb;">Sektoral</span></h1>
         </div>
         """, unsafe_allow_html=True)
     with col_btn:
@@ -341,7 +341,7 @@ def landing_page():
                         </h2>
                         
                         <p class="text-slate-600 text-base lg:text-lg leading-relaxed">
-                            Aplikasi web cerdas untuk menyatukan ratusan dokumen PDF dari berbagai dinas. Mengekstrak halaman dan mengambil <em>screenshot</em> secara otomatis menjadi satu laporan final yang proporsional sebagai wujud <strong>ANDAN (Aplikasi Navigasi Data Andal Nasional)</strong> untuk merawat kualitas data sektoral daerah.
+                            Aplikasi web cerdas untuk menyatukan ratusan dokumen PDF dari berbagai dinas. Mengekstrak halaman dan mengambil <em>screenshot</em> secara otomatis menjadi satu laporan final yang proporsional sebagai upaya <em>andan</em> (merawat dan menjaga) kualitas data statistik sektoral daerah.
                         </p>
                         
                         <div class="pt-6 border-t border-slate-200">
@@ -449,7 +449,7 @@ def login_page():
             <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); margin-bottom: 15px;">
                 {SVG_LOGO.format(size=32)}
             </div>
-            <h2 style='margin-top: 0; text-align: center; color: #1e293b; font-weight: 800; margin-bottom: 5px;'>Andan<span style="color: #2563eb;">SDI</span></h2>
+            <h2 style='margin-top: 0; text-align: center; color: #1e293b; font-weight: 800; margin-bottom: 5px; font-size: 28px;'>Andan<span style="color: #2563eb;">Sektoral</span></h2>
             <p style='text-align: center; color: #64748b; font-weight: 500; margin-bottom: 25px;'>Provinsi Lampung</p>
             <div style="width: 100%; height: 1px; background-color: #e2e8f0; margin-bottom: 25px;"></div>
             <p style='text-align: center; color: #475569; font-weight: 600; margin-bottom: 20px;'>Masuk ke Akun Anda</p>
@@ -493,7 +493,7 @@ def opd_dashboard():
             {SVG_LOGO.format(size=28)}
         </div>
         <div>
-            <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2;">Andan<span style="color: #2563eb;">SDI</span></h1>
+            <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2;">Andan<span style="color: #2563eb;">Sektoral</span></h1>
             <p style="margin: 0; font-size: 14px; color: #64748b; font-weight: 500;">Panel Dinas (Lokus)</p>
         </div>
     </div>
@@ -572,7 +572,7 @@ def admin_dashboard():
             {SVG_LOGO.format(size=28)}
         </div>
         <div>
-            <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2;">Andan<span style="color: #2563eb;">SDI</span></h1>
+            <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2;">Andan<span style="color: #2563eb;">Sektoral</span></h1>
             <p style="margin: 0; font-size: 14px; color: #64748b; font-weight: 500;">Ruang Kerja Walidata (Kominfo)</p>
         </div>
     </div>
