@@ -60,11 +60,13 @@ Path("temp_pdfs").mkdir(exist_ok=True)
 Path("temp_screenshots").mkdir(exist_ok=True)
 
 # Page config
-st.set_page_config(page_title="Evaluasi SDI Provinsi Lampung", page_icon="📊", layout="wide")
+st.set_page_config(page_title="Portal Evaluasi SDI", page_icon="📊", layout="wide")
 
 # Custom CSS
 st.markdown("""
 <style>
+    /* Mengatasi padding bawaan Streamlit agar Landing Page bisa full-width */
+    .block-container { padding-top: 1rem; padding-bottom: 0rem; }
     .stButton>button { background-color: #2b5c8f; color: white; border-radius: 6px; }
     .stButton>button:hover { background-color: #1a3c61; border-color: white;}
     .doc-card { background: white; padding: 1.5rem; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 1rem; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
@@ -192,7 +194,7 @@ def create_pdf_rekap(docs, indikator_kode, indikator_nama):
         # Proses Download & Screenshot di belakang layar
         pdf_path = f"temp_pdfs/temp_{doc['id']}.pdf"
         
-        # Tulis ke PDF bahwa sedang memproses (ini untuk UX jika text di render)
+        # Tulis ke PDF bahwa sedang memproses
         pdf.set_font('Arial', 'B', 12)
         pdf.cell(0, 10, "Bukti Dukung (Screenshot):", ln=True)
         
@@ -209,7 +211,7 @@ def create_pdf_rekap(docs, indikator_kode, indikator_nama):
                 # Cari image data
                 img_data = next((ss for ss in screenshots if ss['page'] == hal), None)
                 
-                if pdf.get_y() > 220: # Auto page break jika space tinggal sedikit
+                if pdf.get_y() > 220:
                     pdf.add_page()
                 else:
                     pdf.ln(5)
@@ -226,28 +228,23 @@ def create_pdf_rekap(docs, indikator_kode, indikator_nama):
                     temp_img_path = f"temp_screenshots/img_{doc['id']}_{hal}.png"
                     img_data['image'].save(temp_img_path, 'PNG')
                     
-                    # Hitung rasio agar proporsional di A4 (lebar max A4 = ~190mm usable)
                     img_w, img_h = img_data['image'].size
                     target_w = 160
                     target_h = (target_w / img_w) * img_h
                     
-                    # Jika gambar kepanjangan, kecilkan lagi atau auto page break
                     if pdf.get_y() + target_h > 280:
                         pdf.add_page()
                     
-                    # Pusatkan gambar
                     x_pos = (210 - target_w) / 2
                     pdf.image(temp_img_path, x=x_pos, y=pdf.get_y(), w=target_w, h=target_h)
                     pdf.set_y(pdf.get_y() + target_h + 5)
                     
-                    # Cleanup image file
                     Path(temp_img_path).unlink(missing_ok=True)
                 else:
                     pdf.set_text_color(255, 0, 0)
                     pdf.cell(0, 6, f"[Gagal mengambil screenshot Halaman {hal}]", ln=True)
                     pdf.set_text_color(0, 0, 0)
             
-            # Cleanup PDF file
             Path(pdf_path).unlink(missing_ok=True)
             
         else:
@@ -255,7 +252,6 @@ def create_pdf_rekap(docs, indikator_kode, indikator_nama):
             pdf.multi_cell(0, 6, "Gagal mengunduh file PDF dari Google Drive. Pastikan akses link bersifat 'Siapa saja yang memiliki link' (Public).")
             pdf.set_text_color(0, 0, 0)
 
-    # Output file FPDF
     output_filename = f"temp_pdfs/Rekap_{indikator_kode}_{datetime.now().strftime('%H%M%S')}.pdf"
     pdf.output(output_filename)
     return output_filename
@@ -269,18 +265,24 @@ if 'show_login' not in st.session_state:
     st.session_state.show_login = False
 
 def landing_page():
-    # Navbar sederhana
-    col_logo, col_space, col_btn = st.columns([3, 6, 1.5])
+    # Bagian Header/Navbar Native Streamlit yang disamarkan agar terlihat menyatu
+    col_logo, col_space, col_btn = st.columns([4, 4, 2])
     with col_logo:
-        st.markdown("<h2 style='color: #2b5c8f; font-weight: 800; margin-top: 0;'>📊 Portal Evaluasi SDI</h2>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="display: flex; align-items: center; gap: 12px; padding-top: 5px;">
+            <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #2563eb, #4338ca); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);">
+                📊
+            </div>
+            <h1 style="margin: 0; font-size: 26px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px;">Portal SDI<span style="color: #2563eb;">.</span></h1>
+        </div>
+        """, unsafe_allow_html=True)
     with col_btn:
+        st.write("") # spacer agar sejajar
         if st.button("🔑 Masuk / Login", type="primary", use_container_width=True):
             st.session_state.show_login = True
             st.rerun()
-            
-    st.write("---")
-    
-    # Infografis Full Screen
+
+    # Konten Split-Screen Landing Page
     infografis_html = """
     <!DOCTYPE html>
     <html lang="id">
@@ -290,80 +292,115 @@ def landing_page():
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: transparent;}
-            .step-circle { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; z-index: 10; }
-            .timeline-line { position: absolute; left: 20px; top: 40px; bottom: -40px; width: 2px; background-color: #cbd5e1; z-index: 0; }
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+            body {
+                font-family: 'Inter', sans-serif;
+                background-color: transparent; /* Menyatu dengan background Streamlit */
+            }
+            .hover-float {
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .hover-float:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
         </style>
     </head>
-    <body class="p-2 md:p-4">
-        <div class="max-w-5xl mx-auto bg-white shadow-lg rounded-2xl overflow-hidden border border-gray-100">
-            <!-- HEADER -->
-            <div class="bg-gradient-to-r from-blue-900 to-blue-700 p-8 text-white text-center">
-                <h1 class="text-3xl md:text-4xl font-extrabold mb-2 tracking-tight">Sistem Rekapitulasi Otomatis</h1>
-                <p class="text-blue-200 text-lg md:text-xl font-medium">Bukti Dukung Penyelenggaraan Statistik Sektoral</p>
-            </div>
-
-            <!-- TENTANG APLIKASI -->
-            <div class="p-8 border-b border-gray-100">
-                <div class="flex flex-col md:flex-row items-center gap-6">
-                    <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-laptop-code text-4xl text-blue-700"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Tentang Aplikasi</h2>
-                        <p class="text-gray-600 leading-relaxed text-md">
-                            Aplikasi inovatif yang membantu Walidata menyatukan ratusan dokumen PDF dari berbagai dinas. Sistem ini bekerja mengekstrak, mengambil <em>screenshot</em> halaman penting secara cerdas, dan menyusunnya menjadi laporan PDF final yang rapi untuk diserahkan kepada penilai BPS.
+    <body class="text-slate-800">
+        <main class="flex items-center pt-8 pb-10">
+            <div class="w-full">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+                    
+                    <!-- BAGIAN KIRI: Teks & Penjelasan Utama -->
+                    <div class="lg:col-span-5 space-y-8">
+                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wide">
+                            <span class="relative flex h-2 w-2">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                            </span>
+                            Sistem Rekapitulasi Otomatis
+                        </div>
+                        
+                        <h2 class="text-4xl xl:text-5xl font-extrabold text-slate-900 leading-[1.2] tracking-tight">
+                            Bukti Dukung <br/>
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Statistik Sektoral</span>
+                        </h2>
+                        
+                        <p class="text-slate-600 text-base lg:text-lg leading-relaxed">
+                            Aplikasi web cerdas untuk menyatukan ratusan dokumen PDF dari berbagai dinas. Mengekstrak halaman dan mengambil <em>screenshot</em> secara otomatis menjadi satu laporan final yang proporsional.
                         </p>
+                        
+                        <div class="pt-6 border-t border-slate-200">
+                            <div class="flex flex-wrap items-center gap-3">
+                                <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-md border border-slate-200 shadow-sm">
+                                    <i class="fa-solid fa-building text-emerald-500 text-sm"></i>
+                                    <span class="text-xs font-semibold text-slate-700">Dinas Lokus</span>
+                                </div>
+                                <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-md border border-slate-200 shadow-sm">
+                                    <i class="fa-solid fa-shield-halved text-blue-500 text-sm"></i>
+                                    <span class="text-xs font-semibold text-slate-700">Walidata</span>
+                                </div>
+                                <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-md border border-slate-200 shadow-sm">
+                                    <i class="fa-solid fa-chart-pie text-amber-500 text-sm"></i>
+                                    <span class="text-xs font-semibold text-slate-700">Penilai BPS</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- ALUR KERJA (WORKFLOW) -->
-            <div class="p-8 bg-gray-50">
-                <h2 class="text-2xl font-bold text-gray-800 mb-8 text-center">Bagaimana Cara Kerjanya?</h2>
-                <div class="relative max-w-3xl mx-auto pb-4">
-                    <!-- Step 1 -->
-                    <div class="relative flex items-start mb-8 group">
-                        <div class="timeline-line hidden md:block"></div>
-                        <div class="step-circle bg-emerald-100 text-emerald-700 flex-shrink-0 md:mr-6 mr-4 border-2 border-emerald-500">1</div>
-                        <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100 flex-1">
-                            <h3 class="font-bold text-lg text-gray-800 mb-1"><i class="fa-brands fa-google-drive mr-2 text-gray-500"></i> Upload Drive (Dinas)</h3>
-                            <p class="text-gray-600 text-sm">Dinas mengunggah dokumen ke Google Drive dan mengubah setelan privasi menjadi <em>"Siapa saja yang memiliki link"</em>.</p>
+                    <!-- BAGIAN KANAN: Grid Alur Kerja -->
+                    <div class="lg:col-span-7 relative">
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-blue-400/20 rounded-full blur-3xl -z-10"></div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 relative z-10">
+                            <!-- Step 1 -->
+                            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-lg shadow-slate-200/40 hover-float">
+                                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-bold mb-4">1</div>
+                                <h3 class="text-base font-bold text-slate-800 mb-2">Upload ke Drive</h3>
+                                <p class="text-sm text-slate-500 leading-relaxed">
+                                    Dinas mengunggah PDF bukti dukung ke Google Drive dengan akses link publik.
+                                </p>
+                            </div>
+
+                            <!-- Step 2 -->
+                            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-lg shadow-slate-200/40 hover-float sm:mt-10">
+                                <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-bold mb-4">2</div>
+                                <h3 class="text-base font-bold text-slate-800 mb-2">Input di Sistem</h3>
+                                <p class="text-sm text-slate-500 leading-relaxed">
+                                    Dinas login, menempelkan link Drive, lalu menentukan halaman target <em>screenshot</em>.
+                                </p>
+                            </div>
+
+                            <!-- Step 3 -->
+                            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-lg shadow-slate-200/40 hover-float sm:-mt-5">
+                                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg font-bold mb-4">3</div>
+                                <h3 class="text-base font-bold text-slate-800 mb-2">Generate Otomatis</h3>
+                                <p class="text-sm text-slate-500 leading-relaxed">
+                                    Walidata menekan tombol. Mesin mengunduh PDF, mengekstrak, dan <em>screenshot</em> layar.
+                                </p>
+                            </div>
+
+                            <!-- Step 4 -->
+                            <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg shadow-slate-900/20 hover-float sm:mt-5 text-white relative overflow-hidden">
+                                <i class="fa-solid fa-file-pdf absolute -right-3 -bottom-3 text-6xl text-white/5"></i>
+                                <div class="w-10 h-10 rounded-xl bg-white/10 text-white flex items-center justify-center text-lg font-bold mb-4">
+                                    <i class="fa-solid fa-check"></i>
+                                </div>
+                                <h3 class="text-base font-bold text-white mb-2">Laporan Siap!</h3>
+                                <p class="text-sm text-slate-300 leading-relaxed">
+                                    PDF rekapitulasi final tersusun rapi. Siap diunduh untuk diserahkan ke BPS.
+                                </p>
+                            </div>
                         </div>
                     </div>
-                    <!-- Step 2 -->
-                    <div class="relative flex items-start mb-8 group">
-                        <div class="timeline-line hidden md:block"></div>
-                        <div class="step-circle bg-emerald-100 text-emerald-700 flex-shrink-0 md:mr-6 mr-4 border-2 border-emerald-500">2</div>
-                        <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100 flex-1">
-                            <h3 class="font-bold text-lg text-gray-800 mb-1"><i class="fa-solid fa-keyboard mr-2 text-gray-500"></i> Input Narasi (Dinas)</h3>
-                            <p class="text-gray-600 text-sm">Dinas memasukkan Link Drive, lalu mengetikkan target halaman yang perlu di-<em>screenshot</em> beserta narasinya di sistem ini.</p>
-                        </div>
-                    </div>
-                    <!-- Step 3 -->
-                    <div class="relative flex items-start mb-8 group">
-                        <div class="timeline-line hidden md:block"></div>
-                        <div class="step-circle bg-blue-100 text-blue-700 flex-shrink-0 md:mr-6 mr-4 border-2 border-blue-500">3</div>
-                        <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100 flex-1">
-                            <h3 class="font-bold text-lg text-gray-800 mb-1"><i class="fa-solid fa-gears mr-2 text-gray-500"></i> Generate Rekap (Walidata)</h3>
-                            <p class="text-gray-600 text-sm">Walidata (Kominfo) menekan tombol Generate. Mesin otomatis bekerja: Mengunduh PDF → Mengekstrak halaman → *Screenshot* → Menyusun laporan.</p>
-                        </div>
-                    </div>
-                    <!-- Step 4 -->
-                    <div class="relative flex items-start">
-                        <div class="step-circle bg-amber-100 text-amber-700 flex-shrink-0 md:mr-6 mr-4 border-2 border-amber-500"><i class="fa-solid fa-check"></i></div>
-                        <div class="bg-amber-50 p-5 rounded-lg shadow-sm border border-amber-200 flex-1">
-                            <h3 class="font-bold text-lg text-gray-800 mb-1"><i class="fa-solid fa-file-pdf mr-2 text-red-500"></i> Hasil Akhir Siap (BPS)</h3>
-                            <p class="text-gray-600 text-sm">PDF Rekapitulasi yang lengkap dengan daftar OPD dan gambar <em>screenshot</em> narasi berhasil dibuat secara proporsional untuk dinilai oleh BPS.</p>
-                        </div>
-                    </div>
+
                 </div>
             </div>
-        </div>
+        </main>
     </body>
     </html>
     """
-    components.html(infografis_html, height=850, scrolling=True)
+    components.html(infografis_html, height=700, scrolling=False)
 
 
 def login_page():
@@ -381,7 +418,7 @@ def login_page():
     with col_login:
         st.markdown("""
         <div style='background-color: white; padding: 30px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); margin-bottom: 20px;'>
-            <h2 style='margin-top: 0; text-align: center; color: #2b5c8f; font-weight: 800;'><i class='fa-solid fa-lock'></i> Masuk ke Sistem</h2>
+            <h2 style='margin-top: 0; text-align: center; color: #2b5c8f; font-weight: 800;'>Masuk ke Sistem</h2>
             <p style='text-align: center; color: #6b7280; margin-bottom: 25px;'>Silakan masuk sesuai dengan peran Anda.</p>
         </div>
         """, unsafe_allow_html=True)
@@ -452,7 +489,6 @@ def opd_dashboard():
             if not doc_name or not drive_link or not halaman_input:
                 st.error("Harap lengkapi semua isian yang wajib (*)!")
             else:
-                # Parsing halaman_input
                 marked_pages = []
                 try:
                     for line in halaman_input.split('\n'):
@@ -470,7 +506,6 @@ def opd_dashboard():
                     st.error("Pastikan nomor halaman berupa ANGKA (misal: 1, bukan satu).")
                     st.stop()
                 
-                # Insert data ke Supabase
                 indikator_nama = next(i['nama'] for i in INDIKATOR if i['kode']==indikator_kode)
                 data = {
                     "opd_name": st.session_state.opd_name,
@@ -498,7 +533,6 @@ def admin_dashboard():
             
     st.write("### 📄 Rekapitulasi Berdasarkan Indikator")
     
-    # Ambil semua data
     result = sb.table('bukti_dukung').select('*').order('created_at', desc=True).execute()
     semua_dokumen = result.data if result.data else []
     
@@ -510,11 +544,10 @@ def admin_dashboard():
             format_func=lambda x: f"{x} - {next(i['nama'] for i in INDIKATOR if i['kode']==x)}"
         )
     
-    # Filter dokumen sesuai indikator terpilih
     docs_filtered = [d for d in semua_dokumen if d['indikator_kode'] == pilih_indikator]
     
     with col_filter2:
-        st.write("") # Spacer
+        st.write("") 
         st.write("")
         if st.button("🎯 GENERATE REKAP PDF", type="primary", use_container_width=True):
             if not docs_filtered:
@@ -522,12 +555,8 @@ def admin_dashboard():
             else:
                 with st.spinner("⏳ Sedang memproses... Mengunduh PDF, memotong halaman, dan menyusun laporan. Harap tunggu..."):
                     indikator_nama = next(i['nama'] for i in INDIKATOR if i['kode']==pilih_indikator)
-                    
                     try:
-                        # Fungsi ini akan melakukan pekerjaan berat secara real-time
                         pdf_path = create_pdf_rekap(docs_filtered, pilih_indikator, indikator_nama)
-                        
-                        # Baca file PDF untuk tombol download
                         with open(pdf_path, "rb") as f:
                             pdf_bytes = f.read()
                             
@@ -561,7 +590,6 @@ def admin_dashboard():
                     for p in doc.get('marked_pages', []):
                         st.write(f"**Hal {p['page']}:** {p['narasi']}")
                         
-                # Tombol hapus
                 if st.button("🗑️ Hapus Evaluasi Ini", key=f"del_{doc['id']}"):
                     sb.table('bukti_dukung').delete().eq('id', doc['id']).execute()
                     st.rerun()
@@ -574,7 +602,6 @@ def main():
     elif st.session_state.auth_role == "admin":
         admin_dashboard()
     else:
-        # Jika belum login, tentukan mau lihat landing page atau form login
         if st.session_state.show_login:
             login_page()
         else:
