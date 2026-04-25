@@ -65,9 +65,9 @@ st.set_page_config(page_title="Portal Evaluasi SDI", page_icon="📊", layout="w
 # Custom CSS
 st.markdown("""
 <style>
-    /* Mengatasi padding bawaan Streamlit agar Landing Page bisa full-width */
-    .block-container { padding-top: 1rem; padding-bottom: 0rem; }
-    .stButton>button { background-color: #2b5c8f; color: white; border-radius: 6px; }
+    /* Mengatasi padding bawaan Streamlit agar tombol tidak terpotong (diperbesar padding top nya) */
+    .block-container { padding-top: 3rem; padding-bottom: 2rem; max-width: 100%; }
+    .stButton>button { background-color: #2b5c8f; color: white; border-radius: 6px; padding-top: 0.5rem; padding-bottom: 0.5rem;}
     .stButton>button:hover { background-color: #1a3c61; border-color: white;}
     .doc-card { background: white; padding: 1.5rem; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 1rem; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
 </style>
@@ -265,24 +265,24 @@ if 'show_login' not in st.session_state:
     st.session_state.show_login = False
 
 def landing_page():
-    # Bagian Header/Navbar Native Streamlit yang disamarkan agar terlihat menyatu
-    col_logo, col_space, col_btn = st.columns([4, 4, 2])
+    # Bagian Header/Navbar Native Streamlit yang sejajar
+    col_logo, col_space, col_btn = st.columns([5, 4, 2])
     with col_logo:
         st.markdown("""
-        <div style="display: flex; align-items: center; gap: 12px; padding-top: 5px;">
-            <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #2563eb, #4338ca); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);">
+        <div style="display: flex; align-items: center; gap: 12px; padding-top: 2px;">
+            <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #2563eb, #4338ca); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);">
                 📊
             </div>
             <h1 style="margin: 0; font-size: 26px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px;">Portal SDI<span style="color: #2563eb;">.</span></h1>
         </div>
         """, unsafe_allow_html=True)
     with col_btn:
-        st.write("") # spacer agar sejajar
+        st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True) # micro-adjustment agar sejajar
         if st.button("🔑 Masuk / Login", type="primary", use_container_width=True):
             st.session_state.show_login = True
             st.rerun()
 
-    # Konten Split-Screen Landing Page
+    # Konten Split-Screen Landing Page dengan Diagram Alur / Timeline Vertikal
     infografis_html = """
     <!DOCTYPE html>
     <html lang="id">
@@ -295,25 +295,29 @@ def landing_page():
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
             body {
                 font-family: 'Inter', sans-serif;
-                background-color: transparent; /* Menyatu dengan background Streamlit */
+                background-color: transparent; 
             }
-            .hover-float {
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            /* Styling untuk hover pada item timeline */
+            .timeline-item {
+                transition: all 0.3s ease;
             }
-            .hover-float:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            .timeline-item:hover {
+                transform: translateX(5px);
+            }
+            .timeline-item:hover .timeline-icon {
+                transform: scale(1.1);
+                box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
             }
         </style>
     </head>
     <body class="text-slate-800">
-        <main class="flex items-center pt-8 pb-10">
+        <main class="flex items-center pt-8 lg:pt-12 pb-10">
             <div class="w-full">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-12 items-center">
                     
-                    <!-- BAGIAN KIRI: Teks & Penjelasan Utama -->
-                    <div class="lg:col-span-5 space-y-8">
-                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wide">
+                    <!-- BAGIAN KIRI: Teks Utama -->
+                    <div class="space-y-8 pr-0 lg:pr-8">
+                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wide shadow-sm">
                             <span class="relative flex h-2 w-2">
                               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                               <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
@@ -321,7 +325,7 @@ def landing_page():
                             Sistem Rekapitulasi Otomatis
                         </div>
                         
-                        <h2 class="text-4xl xl:text-5xl font-extrabold text-slate-900 leading-[1.2] tracking-tight">
+                        <h2 class="text-4xl xl:text-5xl font-extrabold text-slate-900 leading-[1.15] tracking-tight">
                             Bukti Dukung <br/>
                             <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Statistik Sektoral</span>
                         </h2>
@@ -348,49 +352,62 @@ def landing_page():
                         </div>
                     </div>
 
-                    <!-- BAGIAN KANAN: Grid Alur Kerja -->
-                    <div class="lg:col-span-7 relative">
-                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-blue-400/20 rounded-full blur-3xl -z-10"></div>
+                    <!-- BAGIAN KANAN: Diagram Alur (Timeline Flowchart) -->
+                    <div class="relative w-full max-w-lg mx-auto lg:ml-auto">
+                        <!-- Efek cahaya background -->
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl -z-10"></div>
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 relative z-10">
+                        <!-- Timeline Container -->
+                        <div class="relative space-y-6">
+                            
+                            <!-- Garis Penghubung Vertikal -->
+                            <div class="absolute left-[1.35rem] top-4 bottom-8 w-0.5 bg-gradient-to-b from-blue-500 via-indigo-400 to-emerald-400 -z-10"></div>
+                            
                             <!-- Step 1 -->
-                            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-lg shadow-slate-200/40 hover-float">
-                                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-bold mb-4">1</div>
-                                <h3 class="text-base font-bold text-slate-800 mb-2">Upload ke Drive</h3>
-                                <p class="text-sm text-slate-500 leading-relaxed">
-                                    Dinas mengunggah PDF bukti dukung ke Google Drive dengan akses link publik.
-                                </p>
+                            <div class="relative flex items-start gap-5 timeline-item cursor-default">
+                                <div class="w-11 h-11 rounded-full bg-white border-4 border-blue-50 text-blue-600 shadow-md flex items-center justify-center font-bold text-lg flex-shrink-0 timeline-icon z-10">
+                                    1
+                                </div>
+                                <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex-1">
+                                    <h3 class="font-bold text-slate-800 text-base mb-1">Upload ke Drive</h3>
+                                    <p class="text-sm text-slate-500 leading-relaxed">Dinas mengunggah dokumen PDF ke Google Drive dan mengatur akses link menjadi publik.</p>
+                                </div>
                             </div>
 
                             <!-- Step 2 -->
-                            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-lg shadow-slate-200/40 hover-float sm:mt-10">
-                                <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-bold mb-4">2</div>
-                                <h3 class="text-base font-bold text-slate-800 mb-2">Input di Sistem</h3>
-                                <p class="text-sm text-slate-500 leading-relaxed">
-                                    Dinas login, menempelkan link Drive, lalu menentukan halaman target <em>screenshot</em>.
-                                </p>
+                            <div class="relative flex items-start gap-5 timeline-item cursor-default">
+                                <div class="w-11 h-11 rounded-full bg-white border-4 border-blue-50 text-indigo-600 shadow-md flex items-center justify-center font-bold text-lg flex-shrink-0 timeline-icon z-10">
+                                    2
+                                </div>
+                                <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex-1">
+                                    <h3 class="font-bold text-slate-800 text-base mb-1">Input di Sistem</h3>
+                                    <p class="text-sm text-slate-500 leading-relaxed">Dinas login ke portal, menempelkan link Drive, lalu menentukan halaman target <em>screenshot</em> beserta narasinya.</p>
+                                </div>
                             </div>
 
                             <!-- Step 3 -->
-                            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-lg shadow-slate-200/40 hover-float sm:-mt-5">
-                                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg font-bold mb-4">3</div>
-                                <h3 class="text-base font-bold text-slate-800 mb-2">Generate Otomatis</h3>
-                                <p class="text-sm text-slate-500 leading-relaxed">
-                                    Walidata menekan tombol. Mesin mengunduh PDF, mengekstrak, dan <em>screenshot</em> layar.
-                                </p>
+                            <div class="relative flex items-start gap-5 timeline-item cursor-default">
+                                <div class="w-11 h-11 rounded-full bg-white border-4 border-blue-50 text-purple-600 shadow-md flex items-center justify-center font-bold text-lg flex-shrink-0 timeline-icon z-10">
+                                    3
+                                </div>
+                                <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex-1">
+                                    <h3 class="font-bold text-slate-800 text-base mb-1">Generate Otomatis</h3>
+                                    <p class="text-sm text-slate-500 leading-relaxed">Walidata menekan tombol proses. Mesin mengunduh PDF, mengekstrak, dan memotong tangkapan layar.</p>
+                                </div>
                             </div>
 
-                            <!-- Step 4 -->
-                            <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg shadow-slate-900/20 hover-float sm:mt-5 text-white relative overflow-hidden">
-                                <i class="fa-solid fa-file-pdf absolute -right-3 -bottom-3 text-6xl text-white/5"></i>
-                                <div class="w-10 h-10 rounded-xl bg-white/10 text-white flex items-center justify-center text-lg font-bold mb-4">
+                            <!-- Step 4 (Final) -->
+                            <div class="relative flex items-start gap-5 timeline-item cursor-default">
+                                <div class="w-11 h-11 rounded-full bg-emerald-500 border-4 border-emerald-100 text-white shadow-lg flex items-center justify-center font-bold text-lg flex-shrink-0 timeline-icon z-10">
                                     <i class="fa-solid fa-check"></i>
                                 </div>
-                                <h3 class="text-base font-bold text-white mb-2">Laporan Siap!</h3>
-                                <p class="text-sm text-slate-300 leading-relaxed">
-                                    PDF rekapitulasi final tersusun rapi. Siap diunduh untuk diserahkan ke BPS.
-                                </p>
+                                <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-4 rounded-xl border border-slate-700 shadow-md flex-1 text-white relative overflow-hidden">
+                                    <i class="fa-solid fa-file-pdf absolute -right-2 -bottom-4 text-5xl text-white/5"></i>
+                                    <h3 class="font-bold text-white text-base mb-1">Laporan Siap!</h3>
+                                    <p class="text-sm text-slate-300 leading-relaxed">PDF rekapitulasi final tersusun dengan proporsional dan siap diserahkan ke BPS.</p>
+                                </div>
                             </div>
+
                         </div>
                     </div>
 
@@ -400,7 +417,8 @@ def landing_page():
     </body>
     </html>
     """
-    components.html(infografis_html, height=700, scrolling=False)
+    # Mengurangi tinggi agar tidak menyebabkan layout bolong/scroll berlebih di layar
+    components.html(infografis_html, height=650, scrolling=False)
 
 
 def login_page():
