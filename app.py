@@ -24,6 +24,12 @@ OPD_LIST = [
     "Dinas Ketahanan Pangan, Tanaman Pangan dan Hortikultura"
 ]
 
+# Kredensial khusus untuk masing-masing OPD
+OPD_PASSWORDS = {
+    "Dinas Peternakan dan Kesehatan Hewan": "ternaklampungmaju",
+    "Dinas Ketahanan Pangan, Tanaman Pangan dan Hortikultura": "tanilampungmaju"
+}
+
 # Simulasi 38 Indikator (Bisa ditambahkan sesuai kebutuhan)
 INDIKATOR = [
     {"kode": "10101", "nama": "Tingkat Kematangan Penerapan Standar Data Statistik (SDS)"},
@@ -267,15 +273,15 @@ def login_page():
         if role == "Dinas (Lokus)":
             opd = st.selectbox("Pilih OPD", OPD_LIST)
             password = st.text_input("Password", type="password", placeholder="Masukkan password OPD")
-            # Simulasi sederhana: password OPD sama dengan password admin untuk kemudahan demo,
-            # (Di produksi bisa pakai tabel opd_users di Supabase)
+            
             if st.button("Masuk", use_container_width=True):
-                if password == ADMIN_PASSWORD:
+                # Validasi password berdasarkan OPD yang dipilih
+                if opd in OPD_PASSWORDS and password == OPD_PASSWORDS[opd]:
                     st.session_state.auth_role = "opd"
                     st.session_state.opd_name = opd
                     st.rerun()
                 else:
-                    st.error("Password salah!")
+                    st.error("Password salah untuk instansi tersebut!")
                     
         elif role == "Walidata (Kominfo)":
             password = st.text_input("Password Admin", type="password")
