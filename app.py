@@ -59,8 +59,8 @@ except Exception as e:
 Path("temp_pdfs").mkdir(exist_ok=True)
 Path("temp_screenshots").mkdir(exist_ok=True)
 
-# Page config
-st.set_page_config(page_title="Portal Evaluasi SDI", page_icon="📊", layout="wide")
+# Page config (Logo shield)
+st.set_page_config(page_title="Andan SDI Lampung", page_icon="🛡️", layout="wide")
 
 # Custom CSS
 st.markdown("""
@@ -264,16 +264,26 @@ if 'auth_role' not in st.session_state:
 if 'show_login' not in st.session_state:
     st.session_state.show_login = False
 
+# Logo Perisai (Shield) + Grafik Batang di dalamnya
+SVG_LOGO = """
+<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+  <line x1="9" y1="15" x2="9" y2="12"></line>
+  <line x1="12" y1="15" x2="12" y2="9"></line>
+  <line x1="15" y1="15" x2="15" y2="13"></line>
+</svg>
+"""
+
 def landing_page():
     # Bagian Header/Navbar Native Streamlit yang sejajar
     col_logo, col_space, col_btn = st.columns([5, 4, 2])
     with col_logo:
-        st.markdown("""
+        st.markdown(f"""
         <div style="display: flex; align-items: center; gap: 12px; padding-top: 2px;">
-            <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #2563eb, #4338ca); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);">
-                📊
+            <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);">
+                {SVG_LOGO.format(size=24)}
             </div>
-            <h1 style="margin: 0; font-size: 26px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px;">Portal SDI<span style="color: #2563eb;">.</span></h1>
+            <h1 style="margin: 0; font-size: 26px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px;">Andan<span style="color: #2563eb;">SDI</span></h1>
         </div>
         """, unsafe_allow_html=True)
     with col_btn:
@@ -283,7 +293,7 @@ def landing_page():
             st.rerun()
 
     # Konten Split-Screen Landing Page dengan Diagram Alur / Timeline Vertikal
-    infografis_html = """
+    infografis_html = f"""
     <!DOCTYPE html>
     <html lang="id">
     <head>
@@ -293,21 +303,21 @@ def landing_page():
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-            body {
+            body {{
                 font-family: 'Inter', sans-serif;
                 background-color: transparent; 
-            }
+            }}
             /* Styling untuk hover pada item timeline */
-            .timeline-item {
+            .timeline-item {{
                 transition: all 0.3s ease;
-            }
-            .timeline-item:hover {
+            }}
+            .timeline-item:hover {{
                 transform: translateX(5px);
-            }
-            .timeline-item:hover .timeline-icon {
+            }}
+            .timeline-item:hover .timeline-icon {{
                 transform: scale(1.1);
                 box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
-            }
+            }}
         </style>
     </head>
     <body class="text-slate-800">
@@ -331,7 +341,7 @@ def landing_page():
                         </h2>
                         
                         <p class="text-slate-600 text-base lg:text-lg leading-relaxed">
-                            Aplikasi web cerdas untuk menyatukan ratusan dokumen PDF dari berbagai dinas. Mengekstrak halaman dan mengambil <em>screenshot</em> secara otomatis menjadi satu laporan final yang proporsional.
+                            Aplikasi web cerdas untuk menyatukan ratusan dokumen PDF dari berbagai dinas. Mengekstrak halaman dan mengambil <em>screenshot</em> secara otomatis menjadi satu laporan final yang proporsional sebagai wujud <strong>ANDAN (Aplikasi Navigasi Data Andal Nasional)</strong> untuk merawat kualitas data sektoral daerah.
                         </p>
                         
                         <div class="pt-6 border-t border-slate-200">
@@ -434,10 +444,15 @@ def login_page():
     # Form Login Centered
     col_space1, col_login, col_space2 = st.columns([1, 1.5, 1])
     with col_login:
-        st.markdown("""
-        <div style='background-color: white; padding: 30px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); margin-bottom: 20px;'>
-            <h2 style='margin-top: 0; text-align: center; color: #2b5c8f; font-weight: 800;'>Masuk ke Sistem</h2>
-            <p style='text-align: center; color: #6b7280; margin-bottom: 25px;'>Silakan masuk sesuai dengan peran Anda.</p>
+        st.markdown(f"""
+        <div style='background-color: white; padding: 40px; border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); margin-bottom: 20px; display: flex; flex-direction: column; align-items: center;'>
+            <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); margin-bottom: 15px;">
+                {SVG_LOGO.format(size=32)}
+            </div>
+            <h2 style='margin-top: 0; text-align: center; color: #1e293b; font-weight: 800; margin-bottom: 5px;'>Andan<span style="color: #2563eb;">SDI</span></h2>
+            <p style='text-align: center; color: #64748b; font-weight: 500; margin-bottom: 25px;'>Provinsi Lampung</p>
+            <div style="width: 100%; height: 1px; background-color: #e2e8f0; margin-bottom: 25px;"></div>
+            <p style='text-align: center; color: #475569; font-weight: 600; margin-bottom: 20px;'>Masuk ke Akun Anda</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -472,7 +487,17 @@ def login_page():
 # ========== DASHBOARD OPD ==========
 
 def opd_dashboard():
-    st.title("📤 Upload Bukti Dukung")
+    st.markdown(f"""
+    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">
+            {SVG_LOGO.format(size=28)}
+        </div>
+        <div>
+            <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2;">Andan<span style="color: #2563eb;">SDI</span></h1>
+            <p style="margin: 0; font-size: 14px; color: #64748b; font-weight: 500;">Panel Dinas (Lokus)</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     st.info(f"Login sebagai: **{st.session_state.opd_name}**")
     
     with st.sidebar:
@@ -541,7 +566,17 @@ def opd_dashboard():
 # ========== DASHBOARD ADMIN / WALIDATA ==========
 
 def admin_dashboard():
-    st.title("🎛️ Ruang Kerja Walidata (Kominfo)")
+    st.markdown(f"""
+    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">
+            {SVG_LOGO.format(size=28)}
+        </div>
+        <div>
+            <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2;">Andan<span style="color: #2563eb;">SDI</span></h1>
+            <p style="margin: 0; font-size: 14px; color: #64748b; font-weight: 500;">Ruang Kerja Walidata (Kominfo)</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     with st.sidebar:
         if st.button("🚪 Logout", use_container_width=True):
@@ -609,8 +644,18 @@ def admin_dashboard():
                         st.write(f"**Hal {p['page']}:** {p['narasi']}")
                         
                 if st.button("🗑️ Hapus Evaluasi Ini", key=f"del_{doc['id']}"):
-                    sb.table('bukti_dukung').delete().eq('id', doc['id']).execute()
-                    st.rerun()
+                    try:
+                        # Melakukan perintah hapus dari tabel Supabase
+                        res = sb.table('bukti_dukung').delete().eq('id', doc['id']).execute()
+                        
+                        # Memeriksa apakah data berhasil dihapus dengan memvalidasi isi respon (data tidak kosong)
+                        if res.data:
+                            st.rerun()
+                        else:
+                            st.error("❌ Gagal menghapus! Akses ditolak oleh sistem keamanan Supabase.")
+                            st.info("💡 Solusi: Buka dasbor Supabase Anda ➡️ Pilih menu 'Table Editor' ➡️ Buka tabel 'bukti_dukung' ➡️ Matikan pengaturan 'RLS' (Row Level Security) yang berada di pojok kanan atas tabel.")
+                    except Exception as e:
+                        st.error(f"Terjadi kesalahan teknis: {str(e)}")
 
 # ========== MAIN ROUTING ==========
 
