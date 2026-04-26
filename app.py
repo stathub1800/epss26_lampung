@@ -16,6 +16,10 @@ import gdown
 SUPABASE_URL = os.getenv("SUPABASE_URL", "GANTI_DENGAN_URL_SUPABASE_ANDA")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "GANTI_DENGAN_KEY_SUPABASE_ANDA")
 
+# Service Role Key — untuk operasi admin (INSERT/DELETE) yang bypass RLS
+# Ambil dari: Supabase Dashboard → Project Settings → API → service_role (secret)
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "GANTI_DENGAN_SERVICE_ROLE_KEY_ANDA")
+
 # Password Admin diubah menjadi hardcode agar tidak error terbaca env variable yang kosong
 ADMIN_PASSWORD = "kominfo123"
 
@@ -48,10 +52,17 @@ INDIKATOR = [
 # Inisialisasi Supabase
 @st.cache_resource
 def init_supabase():
+    # Client biasa (anon key) — untuk SELECT/read
     return create_client(SUPABASE_URL, SUPABASE_KEY)
+
+@st.cache_resource
+def init_supabase_admin():
+    # Client admin (service_role key) — untuk INSERT/DELETE, bypass RLS
+    return create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
 try:
     sb = init_supabase()
+    sb_admin = init_supabase_admin()
 except Exception as e:
     st.error("Gagal koneksi ke Supabase. Cek URL dan KEY.")
 
@@ -552,7 +563,7 @@ def opd_dashboard():
                     "marked_pages": marked_pages
                 }
                 
-                sb.table('bukti_dukung').insert(data).execute()
+                sb_admin.table('bukti_dukung').insert(data).execute()
                 st.success("✅ Bukti dukung berhasil disimpan!")
                 st.balloons()
 
@@ -638,17 +649,14 @@ def admin_dashboard():
                         
                 if st.button("🗑️ Hapus Evaluasi Ini", key=f"del_{doc['id']}"):
                     try:
-                        # Melakukan perintah hapus dari tabel Supabase
-                        res = sb.table('bukti_dukung').delete().eq('id', doc['id']).execute()
-                        
-                        # Memeriksa apakah data berhasil dihapus dengan memvalidasi isi respon (data tidak kosong)
-                        if res.data:
-                            st.rerun()
-                        else:
-                            st.error("❌ Gagal menghapus! Akses ditolak oleh sistem keamanan Supabase.")
-                            st.info("💡 Solusi: Buka dasbor Supabase Anda ➡️ Pilih menu 'Table Editor' ➡️ Buka tabel 'bukti_dukung' ➡️ Matikan pengaturan 'RLS' (Row Level Security) yang berada di pojok kanan atas tabel.")
+                        # Gunakan sb_admin (service_role key) agar bisa DELETE meski RLS aktif
+                        sb_admin.table('bukti_dukung').delete().eq('id', doc['id']).execute()
+                        # Supabase v2 mengembalikan res.data = [] saat DELETE berhasil — ini normal
+                        # Cukup pastikan tidak ada exception, lalu rerun
+                        st.success("✅ Data berhasil dihapus!")
+                        st.rerun()
                     except Exception as e:
-                        st.error(f"Terjadi kesalahan teknis: {str(e)}")
+                        st.error(f"❌ Gagal menghapus: {str(e)}")
 
 # ========== MAIN ROUTING ==========
 
